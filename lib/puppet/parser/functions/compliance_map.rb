@@ -85,7 +85,7 @@ module Puppet::Parser::Functions
         Default: 'json'
 
         A String that indicates what output style to use. Valid values are
-        'json' and 'yaml'.
+        'json', 'json_pretty', and 'yaml'.
 
         **:client_report**
 
@@ -206,11 +206,18 @@ module Puppet::Parser::Functions
 
     valid_formats = [
       'json',
+      'json_pretty',
       'yaml'
     ]
 
     unless valid_formats.include?(main_config[:format])
       raise Puppet::ParseError, "compliance_map(): 'valid_formats' must be one of: '#{valid_formats.join(', ')}'"
+    end
+
+    if main_config[:format] =~ /^json/
+      main_config[:suffix] = 'json'
+    else
+      main_config[:suffix] = main_config[:format]
     end
 
     valid_report_types = [
@@ -307,9 +314,11 @@ module Puppet::Parser::Functions
         report_dir = File.join(main_config[:server_report_dir], lookupvar('fqdn'))
         FileUtils.mkdir_p(report_dir)
 
-        File.open(File.join(report_dir,"compliance_report.#{main_config[:format]}"),'w') do |fh|
+        File.open(File.join(report_dir,"compliance_report.#{main_config[:suffix]}"),'w') do |fh|
           if main_config[:format] == 'json'
             fh.puts(@compliance_map.to_json)
+          elsif main_config[:format] == 'json_pretty'
+            fh.puts(@compliance_map.to_json(:pretty => true))
           elsif main_config[:format] == 'yaml'
             fh.puts(@compliance_map.to_yaml)
           end
@@ -344,7 +353,7 @@ module Puppet::Parser::Functions
       unless client_vardir
         raise(Puppet::ParseError, "compliance_map(): Cannot find fact `puppet_vardir`. Ensure `puppetlabs/stdlib` is installed")
       else
-        compliance_report_target = %(#{client_vardir}/compliance_report.#{main_config[:format]})
+        compliance_report_target = %(#{client_vardir}/compliance_report.#{main_config[:suffix]})
       end
 
       # Retrieve the catalog resource if it already exists, create one if it
@@ -379,7 +388,9 @@ module Puppet::Parser::Functions
       end
 
       if main_config[:format] == 'json'
-        compliance_resource.set_parameter('content',%(#{(@compliance_map.to_json)}\n))
+        compliance_resource.set_parameter('content',%(#{@compliance_map.to_json}\n))
+      elsif main_config[:format] == 'json_pretty'
+        compliance_resource.set_parameter('content',%(#{@compliance_map.to_json(:pretty => true)}\n))
       elsif main_config[:format] == 'yaml'
         compliance_resource.set_parameter('content',%(#{@compliance_map.to_yaml}\n))
       end

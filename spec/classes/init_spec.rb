@@ -60,8 +60,14 @@ describe 'compliance_markup' do
 
         let(:facts) { facts }
 
-        ['yaml','json'].each do |report_format|
+        ['yaml','json','json_pretty'].each do |report_format|
           context "with report format #{report_format}" do
+
+            if report_format =~ /^json/
+              report_suffix = 'json'
+            else
+              report_suffix = report_format
+            end
 
             before(:each) do
               @server_report_dir = Dir.mktmpdir
@@ -87,17 +93,17 @@ describe 'compliance_markup' do
             # Puppet[:vardir]
             let(:compliance_file_resource) {
               catalogue.resources.select do |x|
-                x.type == 'File' && x[:path] =~ /compliance_report.#{report_format}$/
+                x.type == 'File' && x[:path] =~ /compliance_report.#{report_suffix}$/
               end.flatten.first
             }
 
             let(:report) {
               # There can be only one
-              report_file = "#{params['options']['server_report_dir']}/#{facts[:fqdn]}/compliance_report.#{report_format}"
+              report_file = "#{params['options']['server_report_dir']}/#{facts[:fqdn]}/compliance_report.#{report_suffix}"
 
-              if report_format == 'yaml'
+              if report_suffix == 'yaml'
                 @report = YAML.load_file(report_file)
-              elsif report_format == 'json'
+              elsif report_suffix == 'json'
                 @report ||= JSON.load(File.read(report_file))
               end
 
@@ -121,7 +127,7 @@ describe 'compliance_markup' do
               end
 
               it 'should have a server side compliance node report' do
-                expect(File).to exist("#{params['options']['server_report_dir']}/#{facts[:fqdn]}/compliance_report.#{report_format}")
+                expect(File).to exist("#{params['options']['server_report_dir']}/#{facts[:fqdn]}/compliance_report.#{report_suffix}")
               end
             end
 
@@ -148,9 +154,9 @@ describe 'compliance_markup' do
               end
 
               it "should have a valid #{report_format} report" do
-                if report_format == 'yaml'
+                if report_suffix == 'yaml'
                   expect(YAML.load(compliance_file_resource[:content])['version']).to eq(report_version)
-                elsif report_format == 'json'
+                elsif report_suffix == 'json'
                   expect(JSON.load(compliance_file_resource[:content])['version']).to eq(report_version)
                 else
                   fail("Invalid report type '#{report_format}' specified")

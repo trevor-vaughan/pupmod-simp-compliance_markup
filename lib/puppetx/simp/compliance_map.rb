@@ -124,7 +124,7 @@ unless PuppetX.const_get("SIMP#{Puppet[:environment]}").const_defined?('Complian
         return format_map
       end
 
-      def to_json
+      def to_json(opts={ :pretty => false })
         # Puppet 3.X compatibility
         begin
           require 'puppet/util/pson'
@@ -132,7 +132,11 @@ unless PuppetX.const_get("SIMP#{Puppet[:environment]}").const_defined?('Complian
           require 'puppet/external/pson/pure'
         end
 
-        return PSON.pretty_generate(format_map)
+        if opts[:pretty]
+          return PSON.pretty_generate(format_map)
+        else
+          return PSON.generate(format_map)
+        end
       end
 
       def to_yaml
