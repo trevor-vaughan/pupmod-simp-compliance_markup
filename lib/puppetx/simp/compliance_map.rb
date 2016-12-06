@@ -42,7 +42,7 @@ unless PuppetX.const_get("SIMP#{Puppet[:environment]}").const_defined?('Complian
         return if @initialized
 
         @initialized = true
-        @api_version = '1.0.0'
+        @api_version = '1.1.0'
 
         @config = config
 
@@ -73,6 +73,14 @@ unless PuppetX.const_get("SIMP#{Puppet[:environment]}").const_defined?('Complian
 
         @compliance_map = ordered_hash
         @compliance_map['version'] = @api_version
+
+        # These two are for report correlation
+        @compliance_map['fqdn'] = Facter.fact(:fqdn).value
+
+        _interfaces = Facter.fact(:interfaces).value.split(',').delete_if{|x| x =~ /^(docker|lo|virbr)/}
+
+        @compliance_map['ipaddresses'] = _interfaces.map{|x| Facter.fact("ipaddress_#{x}").value}.compact
+
         @compliance_map['compliance_profiles'] = ordered_hash
 
         @valid_profiles.sort.each do |profile|
@@ -124,6 +132,10 @@ unless PuppetX.const_get("SIMP#{Puppet[:environment]}").const_defined?('Complian
         return format_map
       end
 
+      def to_logstash
+        return PSON.pretty_generate(format_map)
+      end
+
       def to_json(opts={ :pretty => false })
         # Puppet 3.X compatibility
         begin
@@ -133,7 +145,11 @@ unless PuppetX.const_get("SIMP#{Puppet[:environment]}").const_defined?('Complian
         end
 
         if opts[:pretty]
-          return PSON.pretty_generate(format_map)
+          if opts[:pretty] == 'logstash'
+            return to_logstash
+          else
+            return PSON.pretty_generate(format_map)
+          end
         else
           return PSON.generate(format_map)
         end

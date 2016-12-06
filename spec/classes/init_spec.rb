@@ -6,7 +6,7 @@ describe 'compliance_markup' do
       context "on #{os}" do
         profile_name = 'test_profile'
 
-        let(:report_version) { '1.0.0' }
+        let(:report_version) { '1.1.0' }
 
         let(:pre_condition) {
           <<-EOM
@@ -60,10 +60,12 @@ describe 'compliance_markup' do
 
         let(:facts) { facts }
 
-        ['yaml','json','json_pretty'].each do |report_format|
+        ['yaml', 'json', 'json_pretty', 'logstash'].each do |report_format|
           context "with report format #{report_format}" do
 
             if report_format =~ /^json/
+              report_suffix = 'json'
+            elsif report_format == 'logstash'
               report_suffix = 'json'
             else
               report_suffix = report_format
@@ -89,8 +91,8 @@ describe 'compliance_markup' do
               FileUtils.remove_entry(@server_report_dir)
             end
 
-            # Working around the fact that we can't actually figure out how to get
-            # Puppet[:vardir]
+            # Working around the fact that we can't actually figure out how to
+            # get Puppet[:vardir]
             let(:compliance_file_resource) {
               catalogue.resources.select do |x|
                 x.type == 'File' && x[:path] =~ /compliance_report.#{report_suffix}$/
@@ -181,6 +183,14 @@ describe 'compliance_markup' do
 
               it 'should have a valid version number' do
                 expect( report['version'] ).to eq(report_version)
+              end
+
+              it 'should contain the system fqdn' do
+                expect( report['fqdn'] ).to eq(facts[:fqdn])
+              end
+
+              it 'should contain the system ipaddresses' do
+                expect( report['ipaddresses'] ).to_not be_empty
               end
 
               it 'should have a valid compliance profile' do

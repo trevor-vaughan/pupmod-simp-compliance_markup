@@ -1,5 +1,4 @@
 module Puppet::Parser::Functions
-
     newfunction(:compliance_map, :doc => <<-'ENDHEREDOC') do |args|
       This function provides a mechanism for mapping compliance data to
       settings in Puppet.
@@ -82,10 +81,15 @@ module Puppet::Parser::Functions
 
         **:format**
 
-        Default: 'json'
+        Default: 'logstash'
 
         A String that indicates what output style to use. Valid values are
-        'json', 'json_pretty', and 'yaml'.
+        ``json``, ``json_pretty``, ``logstash``, and ``yaml``.
+
+        The ``logstash`` format will split the data in such a way that it is
+        easy to process via an ELG or ELK stack. This will result in
+        duplication of data but will allow the creation of compliance
+        dashboards.
 
         **:client_report**
 
@@ -158,7 +162,7 @@ module Puppet::Parser::Functions
         'unknown_parameters',
         'custom_entries'
       ],
-      :format            => 'json',
+      :format            => 'logstash',
       :client_report     => false,
       :server_report     => true,
       :server_report_dir => File.join(Puppet[:vardir], 'simp', 'compliance_reports')
@@ -207,6 +211,7 @@ module Puppet::Parser::Functions
     valid_formats = [
       'json',
       'json_pretty',
+      'logstash',
       'yaml'
     ]
 
@@ -215,6 +220,8 @@ module Puppet::Parser::Functions
     end
 
     if main_config[:format] =~ /^json/
+      main_config[:suffix] = 'json'
+    elsif main_config[:format] == 'logstash'
       main_config[:suffix] = 'json'
     else
       main_config[:suffix] = main_config[:format]
@@ -319,6 +326,8 @@ module Puppet::Parser::Functions
             fh.puts(@compliance_map.to_json)
           elsif main_config[:format] == 'json_pretty'
             fh.puts(@compliance_map.to_json(:pretty => true))
+          elsif main_config[:format] == 'logstash'
+            fh.puts(@compliance_map.to_json(:pretty => 'logstash'))
           elsif main_config[:format] == 'yaml'
             fh.puts(@compliance_map.to_yaml)
           end
@@ -391,6 +400,8 @@ module Puppet::Parser::Functions
         compliance_resource.set_parameter('content',%(#{@compliance_map.to_json}\n))
       elsif main_config[:format] == 'json_pretty'
         compliance_resource.set_parameter('content',%(#{@compliance_map.to_json(:pretty => true)}\n))
+      elsif main_config[:format] == 'logstash'
+        compliance_resource.set_parameter('content',%(#{@compliance_map.to_json(:pretty => 'logstash')}\n))
       elsif main_config[:format] == 'yaml'
         compliance_resource.set_parameter('content',%(#{@compliance_map.to_yaml}\n))
       end
