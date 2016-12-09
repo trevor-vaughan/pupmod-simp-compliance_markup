@@ -73,9 +73,11 @@ unless PuppetX.const_get("SIMP#{Puppet[:environment]}").const_defined?('Complian
 
         @compliance_map = ordered_hash
         @compliance_map['version'] = @api_version
-
-        # These two are for report correlation
         @compliance_map['fqdn'] = Facter.fact(:fqdn).value
+
+        # For external system correlation engines
+        @compliance_map['data_type'] = 'simp_compliance'
+        @compliance_map['report_id'] = Time.now.strftime('%Y_%m_%d__%H_%M_%S__') + SecureRandom.uuid.split('-').first
 
         _interfaces = Facter.fact(:interfaces).value.split(',').delete_if{|x| x =~ /^(docker|lo|virbr)/}
 
@@ -128,11 +130,25 @@ unless PuppetX.const_get("SIMP#{Puppet[:environment]}").const_defined?('Complian
         return formatted_map
       end
 
+      # @return [Hash] The ComplianceMap in Hash form
       def to_hash
         return format_map
       end
 
+      # We must de-normalize all of the data so that Grafana and Kibana can
+      # make proper queries. Once they properly handle nested data structures,
+      # we can revert to the normal JSON.
       def to_logstash
+        denormalized_map = []
+
+        # Items that we need to be in every segment for dashboard correlation
+        global_attrs = ordered_hash
+        global_attrs['data_type']   = format_map['data_type']
+        global_attrs['fqdn']        = format_map['fqdn']
+        global_attrs['ipaddresses'] = format_map['ipaddresses']
+        global_attrs['report_id']   = format_map['report_id']
+        global_attrs['version']     = format_map['version']
+
         return PSON.pretty_generate(format_map)
       end
 

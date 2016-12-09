@@ -160,6 +160,11 @@ describe 'compliance_markup' do
                   expect(YAML.load(compliance_file_resource[:content])['version']).to eq(report_version)
                 elsif report_suffix == 'json'
                   expect(JSON.load(compliance_file_resource[:content])['version']).to eq(report_version)
+
+                  if report_format == 'logstash'
+                    puts compliance_file_resource[:content]
+                    exit 1
+                  end
                 else
                   fail("Invalid report type '#{report_format}' specified")
                 end
