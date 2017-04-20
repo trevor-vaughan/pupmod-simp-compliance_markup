@@ -42,7 +42,7 @@ class Hiera
 
               if (compliance_map[valid_profile] && compliance_map[valid_profile][key] && compliance_map[valid_profile][key].is_a?(Hash))
 
-                profile_data = Backend.merge_answer(compliance_map[valid_profile], answer, { :behavior => 'deeper', :knockout_prefix => 'xx' })
+                profile_data = Backend.merge_answer(compliance_map[valid_profile], answer, { :behavior => 'deeper', :knockout_prefix => '--' })
               end
             end
           end
@@ -54,9 +54,17 @@ class Hiera
         end
 
         if resolution_type == :array
-          answer = []
+          if answer.is_a?(Array)
+            answer = answer
+          else
+            throw :no_such_key
+          end
         elsif resolution_type.is_a?(Hash) || (resolution_type == :hash)
-          answer = {}
+          if answer.is_a?(Hash)
+            answer = answer
+          else
+            throw :no_such_key
+          end
         elsif answer == ''
           answer = nil
         end
