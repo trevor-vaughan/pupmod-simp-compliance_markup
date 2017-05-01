@@ -1,4 +1,9 @@
-Tue Feb 28 2017 Nick  Miller <nick.miller@onyxpoint.com> - 2.0.1-0
+Mon May 01 2017 Trevor Vaughan <tvaughan@onyxpoint.com> - 2.0.2-0
+- Added the defaut SIMP compliance profiles to the module data
+- Enhanced the lookup mapper function to take an optional default map
+- Passed the internal data as the default map
+
+Tue Feb 28 2017 Nick Miller <nick.miller@onyxpoint.com> - 2.0.1-0
 - travis.yml and gemfile updates
 
 Fri Oct 28 2016 Trevor Vaughan <tvaughan@onyxpoint.com> - 2.0.0-0

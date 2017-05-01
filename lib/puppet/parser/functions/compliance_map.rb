@@ -112,6 +112,14 @@ module Puppet::Parser::Functions
           A directory will be created for each FQDN that
           has a report.
 
+       **:default_map**
+
+          Default: None
+
+          The default map that should be used if no others can be found. This
+          will probably never be manually set during normal usage via the
+          compliance_markup module
+
       Example:
         # Only non-compilant entries and only store them on the client and the
         # server
@@ -161,7 +169,8 @@ module Puppet::Parser::Functions
       :format            => 'json',
       :client_report     => false,
       :server_report     => true,
-      :server_report_dir => File.join(Puppet[:vardir], 'simp', 'compliance_reports')
+      :server_report_dir => File.join(Puppet[:vardir], 'simp', 'compliance_reports'),
+      :default_map => {}
     }
 
     # What profile are we using?
@@ -239,10 +248,15 @@ module Puppet::Parser::Functions
         # Super-hack because 3.X raises a Puppet::ParseError complaining about
         # the lookup function
         rescue NoMethodError, Puppet::ParseError
+          reference_map = nil
+
           begin
-            reference_map = call_function('hiera_hash',['compliance_map',nil])
+            if Puppet.version.split('.').first.to_i > 3
+              reference_map = call_function('hiera_hash',['compliance_map',nil])
+            else
+            end
           rescue NoMethodError
-            reference_map = nil
+            # NOOP
           end
         end
       else
@@ -253,7 +267,11 @@ module Puppet::Parser::Functions
 
     # If we still don't have a reference map, we need to let the user know!
     if !reference_map || (reference_map.respond_to?(:empty) && reference_map.empty?)
-      raise(Puppet::ParseError, %(compliance_map(): Could not find the 'compliance_map' Hash at the global level, in Hiera, or via Lookup))
+      if main_config[:default_map] && !main_config[:default_map].empty?
+        reference_map = main_config[:default_map]
+      else
+        raise(Puppet::ParseError, %(compliance_map(): Could not find the 'compliance_map' Hash at the global level, in Hiera, or via Lookup))
+      end
     end
 
     # Pick up our compiler hitchhiker
