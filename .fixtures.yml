@@ -1,6 +1,9 @@
 ---
 fixtures:
   repositories:
+    simplib:
+      repo: "https://github.com/simp/pupmod-simp-simplib"
+      branch: "master"
     stdlib:
       repo: "https://github.com/simp/puppetlabs-stdlib"
       branch: "master"
