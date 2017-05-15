@@ -12,7 +12,7 @@ module Puppet::Parser::Functions
       ``site.pp``.
 
       When called, the parameters of all classes will be evaluated against
-      global scope variables followed by Hiera data.
+      global scope variables followed by data from lookup().
 
       The variable space against which the class parameters will be evaluated
       must be structured as the following hash:
@@ -40,10 +40,6 @@ module Puppet::Parser::Functions
       Everything else will be converted to a String and can be provided a Ruby
       regular expression of the following format: 're:REGEX' where 'REGEX' does
       **not** include the starting and trailing slashes.
-
-      If you use the special string '__IGNORE__', the check will be ignored.
-      This may be useful when overriding items in a Hierarchy where you want to
-      ignore indiviual checks that were inherited from a lower level.
 
       You may also add compliance data directly to your modules outside of a
       parameter mapping. This is useful if you have more advanced logic that is
@@ -240,28 +236,18 @@ module Puppet::Parser::Functions
     reference_map ||= Hash.new
 
     if ( !reference_map || reference_map.empty? )
-      # If not using an ENC, look in Hiera
-      # Puppet 4 compat
+      # If not using an ENC, check the lookup stack
+      #
+      # We need to check for both 'compliance_map' and
+      # 'compliance_markup::compliance_map' for backward compatibility
       if self.respond_to?(:call_function)
-        begin
-          reference_map = call_function('lookup',['compliance_map',Hash,'deep',nil])
-        # Super-hack because 3.X raises a Puppet::ParseError complaining about
-        # the lookup function
-        rescue NoMethodError, Puppet::ParseError
-          reference_map = nil
+          reference_map = call_function('lookup',['compliance_map', {'merge' => 'deep', 'default_value' => nil}])
 
-          begin
-            if Puppet.version.split('.').first.to_i > 3
-              reference_map = call_function('hiera_hash',['compliance_map',nil])
-            else
-            end
-          rescue NoMethodError
-            # NOOP
+          unless reference_map
+            reference_map = call_function('lookup',['compliance_markup::compliance_map', {'merge' => 'deep', 'default_value' => nil}])
           end
-        end
       else
-        # This is Puppet 3.X only
-        reference_map = function_hiera_hash(['compliance_map',nil])
+        raise(Puppet::ParseError, %(compliance_map(): The lookup() capability is required))
       end
     end
 
@@ -270,7 +256,7 @@ module Puppet::Parser::Functions
       if main_config[:default_map] && !main_config[:default_map].empty?
         reference_map = main_config[:default_map]
       else
-        raise(Puppet::ParseError, %(compliance_map(): Could not find the 'compliance_map' Hash at the global level, in Hiera, or via Lookup))
+        raise(Puppet::ParseError, %(compliance_map(): Could not find the 'compliance_map' Hash at the global level or via Lookup))
       end
     end
 
