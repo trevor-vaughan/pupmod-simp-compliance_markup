@@ -3,7 +3,7 @@ require 'spec_helper'
 describe 'compliance_markup' do
   context 'supported operating systems' do
     on_supported_os.each do |os, facts|
-      let(:report_version) { '1.0.0' }
+      let(:report_version) { '1.0.1' }
 
       context "on #{os}" do
         context 'with data in modules' do
@@ -86,7 +86,6 @@ describe 'compliance_markup' do
             end
           end
         end
-
 
         context 'with a fabricated test profile' do
 

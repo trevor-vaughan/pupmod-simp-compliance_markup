@@ -281,9 +281,15 @@ module Puppet::Parser::Functions
     if hitchhiker
       @compliance_map = hitchhiker
     else
+      system_info = {
+        # Add the rest of the useful information to the map
+        'fqdn'     => lookupvar('fqdn'),
+        'hostname' => lookupvar('hostname')
+      }
+
       # Create the validation report object
       # Have to break things out because jruby can't handle '::' in const_get
-      @compliance_map ||= PuppetX.const_get("SIMP#{Puppet[:environment]}").const_get('ComplianceMap').new(compliance_profiles, reference_map, main_config)
+      @compliance_map ||= PuppetX.const_get("SIMP#{Puppet[:environment]}").const_get('ComplianceMap').new( compliance_profiles, reference_map, main_config, system_info )
     end
 
     file = @source.file

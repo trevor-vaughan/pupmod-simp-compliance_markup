@@ -38,11 +38,11 @@ unless PuppetX.const_get("SIMP#{Puppet[:environment]}").const_defined?('Complian
       #       }
       #     }
       #
-      def initialize(valid_profiles, compliance_mapping, config={})
+      def initialize(valid_profiles, compliance_mapping, config={}, extra_info={})
         return if @initialized
 
         @initialized = true
-        @api_version = '1.0.0'
+        @api_version = '1.0.1'
 
         @config = config
 
@@ -73,6 +73,7 @@ unless PuppetX.const_get("SIMP#{Puppet[:environment]}").const_defined?('Complian
 
         @compliance_map = ordered_hash
         @compliance_map['version'] = @api_version
+        @compliance_map.merge!(extra_info)
         @compliance_map['compliance_profiles'] = ordered_hash
 
         @valid_profiles.sort.each do |profile|
