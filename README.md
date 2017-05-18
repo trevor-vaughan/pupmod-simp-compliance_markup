@@ -256,10 +256,22 @@ values set in the compliance map data structure.
 
 The Puppet server **should** automatically pick the backend up from the module.
 
-In some *rare* cases, we have seen this fail and have had to drop the
+In some **rare** cases, we have seen this fail and have had to drop the
 `compliance_map_backend.rb` file directly into
 `/opt/puppetlabs/puppet/lib/ruby/vendor_ruby/hiera/backend` and then restart
 the Puppet server.
+
+### IMPORTANT: Preparing for Activation
+
+Due to the order that Puppet does lookups in 4.10+, you must be sure to include
+the following **prior** to any module include that you wish to enforce.
+
+**NOTE:** Including this class will have **no** impact on your infrastructure,
+it simply ensures that the `compliance_markup` resource is properly loaded.
+
+```ruby
+  include compliance_markup::pre_hook
+```
 
 ### Activating the Backend
 
@@ -306,7 +318,11 @@ Items at the left side of the Array will override later items.
 
 #### Module Parameter (preferred)
 
-The `compliance_markup::enforce_profiles` parameter may be used to cleanly set, and override, the applicable profiles in Hiera (or your ENC).
+The `compliance_markup::enforce_profiles` parameter may be used to cleanly set,
+and override, the applicable profiles in Hiera (or your ENC).
+
+If you specify an Array, then the first profile to have a valid entry, from
+left to right, will win.
 
 #### Global Setting
 
@@ -327,7 +343,8 @@ class foo (
 
 $enforce_compliance_profile = 'my_policy'
 
-include '::foo'
+include compliance_markup::pre_hook
+include foo
 ```
 
 #### Example 2 - Multi-Profile
@@ -345,7 +362,8 @@ class foo (
 # my_policy wins conflicts
 $enforce_compliance_profile = ['my_policy', 'my_less_important_policy']
 
-include '::foo'
+include compliance_markup::pre_hook
+include foo
 ```
 
 ## Limitations
@@ -353,6 +371,10 @@ include '::foo'
 Depending on the version of Puppet being used, the `compliance_map()` function
 may not be able to precisely determine where the function has been called and a
 best guess may be provided.
+
+Enforcement, when using the profiles baked into the `compliance_markup` module,
+will only apply to classes that are included **after**
+`compliance_markup::pre_hook`. This is an unfortunate side effect of Puppet 4.9+
 
 ## Development
 

@@ -1,5 +1,4 @@
 module Puppet::Parser::Functions
-
     newfunction(:compliance_map, :doc => <<-'ENDHEREDOC') do |args|
       This function provides a mechanism for mapping compliance data to
       settings in Puppet.
@@ -185,6 +184,11 @@ module Puppet::Parser::Functions
           user_config[:report_types] = Array(user_config[:report_types])
         end
 
+        # Takes care of things that have been set to 'undef' in Puppet
+        user_config.delete_if{|k,v|
+          !v || v.is_a?(Symbol)
+        }
+
         main_config.merge!(user_config)
       else
         custom_compliance_profile    = args.shift
@@ -231,8 +235,17 @@ module Puppet::Parser::Functions
       raise Puppet::ParseError, "compliance_map(): 'report_type' must include '#{valid_report_types.join(', ')}'"
     end
 
-    compliance_profiles = Array(lookup_global_silent('compliance_profile'))
-    reference_map       = lookup_global_silent('compliance_map')
+    # Global lookup for the legacy stack
+    compliance_profiles = lookup_global_silent('compliance_profile')
+    # ENC compatible lookup
+    compliance_profiles ||= lookup_global_silent('compliance_markup::validate_profiles')
+    # Module-level lookup
+    compliance_profiles ||= catalog.resource('Class[compliance_markup]')[:validate_profiles]
+
+    # If we didn't find any profiles to map, bail
+    return unless compliance_profiles
+
+    reference_map = lookup_global_silent('compliance_map')
     reference_map ||= Hash.new
 
     if ( !reference_map || reference_map.empty? )

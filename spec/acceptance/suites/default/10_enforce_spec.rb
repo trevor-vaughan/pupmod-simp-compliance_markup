@@ -11,9 +11,9 @@ describe 'compliance_markup class enforcement' do
   - yaml
   - compliance_map
 :yaml:
-  :datadir: "/etc/puppetlabs/code/hieradata"
+  :datadir: "/etc/puppetlabs/code/environments/%{environment}/hieradata"
 :compliance_map:
-  :datadir: "/etc/puppetlabs/code/hieradata"
+  :datadir: "/etc/puppetlabs/code/environments/%{environment}/hieradata"
 :hierarchy:
   - "compliance_profiles/%{compliance_profile}"
   - default
@@ -45,10 +45,12 @@ describe 'compliance_markup class enforcement' do
 
   let(:base_manifest) {
     <<-EOS
+      # Needed for Hiera
+      $compliance_profile = 'base_profile'
       $enforce_compliance_profile = 'base_profile'
 
+      include 'compliance_markup::pre_hook'
       include 'useradd'
-      include 'compliance_markup'
     EOS
   }
 
@@ -72,6 +74,8 @@ compliance_map:
 
   let(:extra_manifest) {
     <<-EOS
+      # Needed for Hiera
+      $compliance_profile = 'base_profile'
       $enforce_compliance_profile = ['base_profile', 'extra_profile']
 
       include 'useradd'
@@ -139,7 +143,7 @@ compliance_map:
 
       it 'should not have /bin/stacked_shell in /etc/shells' do
         result = on(host, 'cat /etc/shells').output.strip
-        expect(result).to match(%r(/bin/stacked_shell))
+        expect(result).to_not match(%r(/bin/stacked_shell))
       end
     end
 
@@ -166,7 +170,7 @@ compliance_map:
 
       it 'should not have /bin/extra_shell in /etc/shells' do
         result = on(host, 'cat /etc/shells').output.strip
-        expect(result).to match(%r(/bin/extra_shell))
+        expect(result).to_not match(%r(/bin/extra_shell))
       end
     end
   end
