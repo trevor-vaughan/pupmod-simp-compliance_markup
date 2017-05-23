@@ -6,9 +6,6 @@
 # @param validate_profiles
 #   Compliance profiles that you wish to validate against
 #
-# @param enforce_profiles
-#   Compliance profiles that you wish to enforce
-#
 # @param compliance_map
 #   The compliance Hash to which to map
 #
@@ -47,14 +44,20 @@
 #     sees it:
 #     ``/opt/puppetlabs/server/data/puppetserver/simp/compliance_reports``
 #
+# @param custom_report_entries
+#   A hash that will be included in the compliance report under the heading
+#   ``site_data``
+#
+#   * This can be used for adding *anything* to the compliance report. The hash
+#     is simply processed with ``to_yaml``
+#
 # @param options
 #   The options to pass directly to the `compliance_map` validation function
 #
 #   * If specified, various other options may be ignored
 class compliance_markup (
-  Optional[Array[String[1]]]     $validate_profiles  = undef,
-  Optional[Array[String[1]]]     $enforce_profiles   = undef,
-  Hash                           $compliance_map     = {},
+  Optional[Array[String[1]]]     $validate_profiles     = undef,
+  Hash                           $compliance_map        = {},
   Array[
     Enum[
       'full',
@@ -69,31 +72,29 @@ class compliance_markup (
   Boolean                        $report_on_client   = false,
   Boolean                        $report_on_server   = true,
   Optional[Stdlib::Absolutepath] $server_report_dir  = undef,
+  Optional[Hash]                 $custom_report_data = undef,
   Optional[Hash]                 $options            = undef
 ) {
   $available_profiles = delete($compliance_map.keys, 'version')
 
-  unless $caller_module_name == $module_name {
-    if $options {
-      if $compliance_map and !$options['default_map'] {
-        $_full_options = $options + { 'default_map' => $compliance_map }
-      }
-      else {
-        $_full_options = $options
-      }
-
-      $_options = $_full_options
+  if $options {
+    if $compliance_map and !$options['default_map'] {
+      $_full_options = $options + { 'default_map' => $compliance_map }
     }
     else {
-      $_options = {
-        'report_types'      => $report_types,
-        'format'            => $report_format,
-        'client_report'     => $report_on_client,
-        'server_report'     => $report_on_server,
-        'server_report_dir' => $server_report_dir
-      }
+      $_full_options = $options
     }
 
-    compliance_markup::map { 'execute': options => $_options }
+    $_options = $_full_options
+  }
+  else {
+    $_options = {
+      'report_types'      => $report_types,
+      'format'            => $report_format,
+      'client_report'     => $report_on_client,
+      'server_report'     => $report_on_server,
+      'server_report_dir' => $server_report_dir,
+      'site_data'         => $custom_report_data
+    }
   }
 }

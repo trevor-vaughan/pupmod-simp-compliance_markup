@@ -1,49 +1,6 @@
 class Hiera
   module Backend
-    class Compliance_map_backend
-=begin
-      module Puppet::Pops::Lookup
-        # Puppet 4.10+ added a name stack to ensure that there aren't lookup loops.
-        #
-        # However, we use recursion in our stack, so we need to override this
-        # and catch items if they go too far down the stack
-        module ComplianceMapExtensions
-          def check(name)
-            @compliance_map_to_ignore = {
-              'compliance_map' => {
-                :count => 0
-              },
-              'enforce_compliance_profile' => {
-                :count => 0
-              },
-              'compliance_markup::enforce_profiles' => {
-                :count => 0
-              },
-              'compliance_markup::compliance_map' => {
-                :count => 0
-              }
-            }
-
-            if @compliance_map_to_ignore[name]
-              @compliance_map_to_ignore[name][:count] += 1
-
-              if @compliance_map_to_ignore[name][:count] > 1
-                raise Puppet::DataBinding::RecursiveLookupError, "Recursive lookup detected in [#{@name_stack.join(', ')}"
-              end
-            end
-
-            if @name_stack
-              @name_stack = (@name_stack - @compliance_map_to_ignore.keys)
-            end
-
-            super
-          end
-        end
-
-        Invocation.prepend ComplianceMapExtensions
-      end
-=end
-
+    class Compliance_markup_enforce_backend
       require 'deep_merge'
 
       def initialize
@@ -79,15 +36,20 @@ class Hiera
             # using the global entries
             #
             # It is, however, possible that they did not properly include the
-            # compliance_markup::pre_hook before *everything* that they want to
-            # enforce
+            # compliance_markup::enforcement_helper before *everything* that
+            # they want to enforce
             compliance_markup_resource = scope.catalog.resource('Class[compliance_markup]')
+            compliance_enforce_resource = scope.catalog.resource('Class[compliance_markup::enforcement_helper]')
 
             # The following two items pull any global entries that might be set
             #
             # This is mainly for ENC compatibility
             global_profile_list = Array(retrieve_global(scope.real, 'enforce_compliance_profile'))
-            module_profile_list = Array(retrieve_global(scope.real, 'compliance_markup::enforce_profiles'))
+            module_profile_list = Array(retrieve_global(scope.real, 'compliance_markup::enforcement_helper::profiles'))
+
+            if module_profile_list.empty? && compliance_enforce_resource
+              module_profile_list = Array(compliance_enforce_resource[:profiles])
+            end
 
             # Create an Array of all profiles that we want to enforce
             compliance_profiles_to_enforce = global_profile_list + module_profile_list
@@ -172,7 +134,7 @@ class Hiera
                     # The compliance map uses empty values as items to be ignored
                     #
                     # This probably needs to change in the future
-                    if map_val && (map_val != '')
+                    if map_val && (map_val != '') && (map_val !~ /^re:/)
                       answer = map_val
 
                       break

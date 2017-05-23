@@ -206,18 +206,28 @@ unless PuppetX.const_get("SIMP#{Puppet[:environment]}").const_defined?('Complian
                 next
               end
 
-              ref_value = ref_entry['value']
-              tgt_value = resource.parameters[param].value
-
-              if ref_value.to_s.strip == tgt_value.to_s.strip
-                compliance_status = 'compliant'
-              else
-                compliance_status = 'non_compliant'
-              end
-
+              # Fail if the entry doesn't have the proper format
               required_metadata = ['identifiers','value']
               required_metadata.each do |md|
                 raise "#{@err_msg} Failed on #{profile} profile, #{resource_ref} #{ref_entry}, medatada #{md}" if ref_entry[md].nil?
+              end
+
+              # Perform the actual matching
+              ref_value = ref_entry['value']
+              tgt_value = resource.parameters[param].value
+
+              compliance_status = 'non_compliant'
+
+              # Regular expression match
+              if ref_value =~ /^re:(.+)/
+                comparator = Regexp.new($1)
+
+                if tgt_value =~ comparator
+                  compliance_status = 'compliant'
+                end
+              # Default match
+              elsif ref_value.to_s.strip == tgt_value.to_s.strip
+                compliance_status = 'compliant'
               end
 
               report_data = ordered_hash

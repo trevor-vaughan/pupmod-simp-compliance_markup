@@ -9,10 +9,10 @@ describe 'compliance_markup class enforcement' do
 ---
 :backends:
   - yaml
-  - compliance_map
+  - compliance_markup_enforce
 :yaml:
   :datadir: "/etc/puppetlabs/code/environments/%{environment}/hieradata"
-:compliance_map:
+:compliance_markup_enforce:
   :datadir: "/etc/puppetlabs/code/environments/%{environment}/hieradata"
 :hierarchy:
   - "compliance_profiles/%{compliance_profile}"
@@ -49,13 +49,17 @@ describe 'compliance_markup class enforcement' do
       $compliance_profile = 'base_profile'
       $enforce_compliance_profile = 'base_profile'
 
-      include 'compliance_markup::pre_hook'
+      include 'compliance_markup::enforcement_helper'
       include 'useradd'
     EOS
   }
 
   let(:base_hieradata) { <<-EOF
 ---
+compliance_markup::enforcement_helper::profiles:
+  - base_profile
+  - extra_profile
+
 compliance_map:
   version: 1.0.0
   base_profile:
@@ -76,10 +80,12 @@ compliance_map:
     <<-EOS
       # Needed for Hiera
       $compliance_profile = 'base_profile'
-      $enforce_compliance_profile = ['base_profile', 'extra_profile']
+
+      include 'compliance_markup::enforcement_helper'
 
       include 'useradd'
-      include 'compliance_markup'
+
+      include 'compliance_markup::validate'
     EOS
   }
 

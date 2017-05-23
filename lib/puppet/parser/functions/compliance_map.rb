@@ -40,6 +40,11 @@ module Puppet::Parser::Functions
       regular expression of the following format: 're:REGEX' where 'REGEX' does
       **not** include the starting and trailing slashes.
 
+        Example:
+          'value' : 're:oo'
+
+          Matches: 'foo' and 'boo' but not 'bar'
+
       You may also add compliance data directly to your modules outside of a
       parameter mapping. This is useful if you have more advanced logic that is
       required to meet a particular internal requirement.
@@ -281,15 +286,27 @@ module Puppet::Parser::Functions
     if hitchhiker
       @compliance_map = hitchhiker
     else
-      system_info = {
+      extra_data = {
         # Add the rest of the useful information to the map
-        'fqdn'     => lookupvar('fqdn'),
-        'hostname' => lookupvar('hostname')
+        'fqdn'              => lookupvar('fqdn'),
+        'hostname'          => lookupvar('hostname'),
+        'ipaddress'         => lookupvar('ipaddress'),
+        'puppetserver_info' => 'local_compile'
       }
+
+      puppetserver_facts = lookup_global_silent('server_facts')
+
+      if puppetserver_facts && !puppetserver_facts.empty?
+        extra_data['puppetserver_info'] = puppetserver_facts
+      end
+
+      if main_config[:site_data]
+        extra_data['site_data'] = main_config[:site_data]
+      end
 
       # Create the validation report object
       # Have to break things out because jruby can't handle '::' in const_get
-      @compliance_map ||= PuppetX.const_get("SIMP#{Puppet[:environment]}").const_get('ComplianceMap').new( compliance_profiles, reference_map, main_config, system_info )
+      @compliance_map ||= PuppetX.const_get("SIMP#{Puppet[:environment]}").const_get('ComplianceMap').new( compliance_profiles, reference_map, main_config, extra_data )
     end
 
     file = @source.file

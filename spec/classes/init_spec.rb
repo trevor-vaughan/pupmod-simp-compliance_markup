@@ -6,6 +6,13 @@ describe 'compliance_markup' do
       let(:report_version) { '1.0.1' }
 
       context "on #{os}" do
+
+        # This needs to be called as the very last item of a compile
+        let(:post_condition) {<<-EOM
+            include 'compliance_markup::validate'
+          EOM
+        }
+
         context 'with data in modules' do
 
           before(:each) do
@@ -191,8 +198,7 @@ describe 'compliance_markup' do
 
                 let(:params) { @default_params }
 
-                it {
-                  is_expected.to(create_class('compliance_markup')) }
+                it { is_expected.to(create_class('compliance_markup')) }
 
                 it 'should not have a compliance File Resource' do
                   expect(compliance_file_resource).to be_nil
@@ -204,6 +210,13 @@ describe 'compliance_markup' do
 
                 it 'should have a server side compliance node report' do
                   expect(File).to exist("#{params['options']['server_report_dir']}/#{facts[:fqdn]}/compliance_report.#{report_format}")
+                end
+
+                it 'should have the default extra data in the report' do
+                  expect(report['fqdn']).to eq(facts[:fqdn])
+                  expect(report['hostname']).to eq(facts[:hostname])
+                  expect(report['ipaddress']).to eq(facts[:ipaddress])
+                  expect(report['puppetserver_info']).to eq('local_compile')
                 end
               end
 
