@@ -191,7 +191,7 @@ module Puppet::Parser::Functions
 
         # Takes care of things that have been set to 'undef' in Puppet
         user_config.delete_if{|k,v|
-          !v || v.is_a?(Symbol)
+          v.nil? || v.is_a?(Symbol)
         }
 
         main_config.merge!(user_config)
