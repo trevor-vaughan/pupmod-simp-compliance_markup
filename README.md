@@ -54,10 +54,10 @@ deploying them into production.
 
 By default, the `compliance_map()` function creates a set of reports, one per
 node, on your Puppet Server at
-`Puppet[:vardir]/simp/compliance_reports/<fqdn>`.
+`/opt/puppetlabs/server/data/puppetserver/simp/compliance_reports/<fqdn>`.
 
 You may optionally enable the creation of a `File` resource on each of your
-clients if you with to have changes in this data automatically exported into
+clients if you wish to have changes in this data automatically exported into
 `PuppetDB`.
 
 ## Usage

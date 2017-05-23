@@ -1,3 +1,8 @@
+Tue Mar 23 2017 Trevor Vaughan <tvaughan@onyxpoint.com> - 2.1.0-0
+- Added client metadata to the compliance report for easier analysis
+- Fixed several minor processing bugs
+- Added the documented, but missing, regular expression match capability
+
 Mon May 01 2017 Trevor Vaughan <tvaughan@onyxpoint.com> - 2.0.2-0
 - Added the defaut SIMP compliance profiles to the module data
 - Enhanced the lookup mapper function to take an optional default map
