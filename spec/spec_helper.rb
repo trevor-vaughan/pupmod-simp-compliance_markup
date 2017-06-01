@@ -25,10 +25,10 @@ default_hiera_config =<<-EOM
 ---
 :backends:
   - "yaml"
-  - "compliance_markup_enforce"
+  - "compliance_markup"
 :yaml:
   :datadir: "stub"
-:compliance_markup_enforce:
+:compliance_markup:
   :datadir: "stub"
 :hierarchy:
   - "%{custom_hiera}"
