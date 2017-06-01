@@ -5,16 +5,16 @@ class Hiera
 
       def initialize
         Hiera.debug('Hiera Compliance Map backend starting')
-
         self.class.instance_variable_set('@compliance_map_recursion_lock', false)
       end
 
       def lookup(key, scope, order_override, resolution_type, context)
+        require 'pry'
         Hiera.debug("Looking up #{key} in Compliance Map backend")
 
         answer = nil
 
-        if (key =~ /^compliance_markup::/) || self.class.instance_variable_get('@compliance_map_recursion_lock')
+        if (key =~ /^compliance_markup::compliance_map/) || self.class.instance_variable_get('@compliance_map_recursion_lock')
           Hiera.debug("Compliance Map avoiding recursion loop while looking for #{key}")
 
           throw :no_such_key

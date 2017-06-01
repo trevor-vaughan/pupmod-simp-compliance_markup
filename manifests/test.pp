@@ -6,8 +6,10 @@
 #
 #   * Must be present in a compliance map
 #
-class compliance_markup::enforcement_helper (
-  Optional[Array[String[1]]] $profiles = undef
+class compliance_markup::test (
+	$testvariable = "none"
 ){
-  include ::compliance_markup
+	notify { "compliance_markup::test": 
+	message => "compliance_markup::test::testvariable = ${testvariable}"
+	}
 }

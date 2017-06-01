@@ -9,7 +9,7 @@ group :test do
   gem 'rake'
   gem 'puppet', ENV.fetch('PUPPET_VERSION',  '~>4')
   gem 'rspec'
-  gem 'rspec-puppet', :git => 'https://github.com/trevor-vaughan/rspec-puppet.git', :branch => 'add_post_condition'
+  gem 'rspec-puppet', :git => 'https://github.com/heliocentric/rspec-puppet.git', :branch => 'fix_function_test'
   gem 'hiera-puppet-helper'
   gem 'puppetlabs_spec_helper'
   gem 'metadata-json-lint'
