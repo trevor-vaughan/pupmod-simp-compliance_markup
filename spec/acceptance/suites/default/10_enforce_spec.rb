@@ -9,10 +9,10 @@ describe 'compliance_markup class enforcement' do
 ---
 :backends:
   - yaml
-  - compliance_markup_enforce
+  - compliance_markup
 :yaml:
   :datadir: "/etc/puppetlabs/code/environments/%{environment}/hieradata"
-:compliance_markup_enforce:
+:compliance_markup:
   :datadir: "/etc/puppetlabs/code/environments/%{environment}/hieradata"
 :hierarchy:
   - "compliance_profiles/%{compliance_profile}"
@@ -45,24 +45,18 @@ describe 'compliance_markup class enforcement' do
 
   let(:base_manifest) {
     <<-EOS
-      # Needed for Hiera
-      $compliance_profile = 'base_profile'
-      $enforce_compliance_profile = 'base_profile'
-
-      include 'compliance_markup::enforcement_helper'
       include 'useradd'
     EOS
   }
 
   let(:base_hieradata) { <<-EOF
 ---
-compliance_markup::enforcement_helper::profiles:
-  - base_profile
-  - extra_profile
+compliance_markup::enforcement:
+  - disa
 
-compliance_map:
+compliance_markup::compliance_map:
   version: 1.0.0
-  base_profile:
+  disa:
     useradd::shells:
       identifiers:
         - FOO
@@ -73,27 +67,7 @@ compliance_map:
         - /bin/bash
         - /sbin/nologin
         - /bin/test_shell
-    EOF
-  }
-
-  let(:extra_manifest) {
-    <<-EOS
-      # Needed for Hiera
-      $compliance_profile = 'base_profile'
-
-      include 'compliance_markup::enforcement_helper'
-
-      include 'useradd'
-
-      include 'compliance_markup::validate'
-    EOS
-  }
-
-  let(:extra_hieradata) { <<-EOF
----
-compliance_map:
-  version: 1.0.0
-  extra_profile:
+  nist:
     useradd::shells:
       identifiers:
         - FOO2
@@ -101,6 +75,21 @@ compliance_map:
       notes: Nothing fun really
       value:
         - /bin/extra_shell
+    EOF
+  }
+
+  let(:extra_manifest) {
+    <<-EOS
+      # Needed for Hiera
+      include 'useradd'
+    EOS
+  }
+
+  let(:extra_hieradata) { <<-EOF
+---
+compliance_markup::enforcement:
+  - nist
+  - disa
     EOF
   }
 

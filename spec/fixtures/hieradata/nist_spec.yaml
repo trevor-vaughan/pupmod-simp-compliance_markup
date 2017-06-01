@@ -1,0 +1,23 @@
+#
+---
+compliance_markup::enforcement:
+  - nist
+  - site
+  - disa
+compliance_markup::compliance_map:
+  version: '1.0.0'
+  disa:
+    compliance_markup::test::testvariable:
+      identifiers :
+        - 'ID1.1'
+      value : disa
+  nist:
+    compliance_markup::test::testvariable:
+      identifiers :
+        - 'ID1.1'
+      value : nist
+  site:
+    compliance_markup::test::testvariable:
+      identifiers :
+        - 'ID1.1'
+      value : site

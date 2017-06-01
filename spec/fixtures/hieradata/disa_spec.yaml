@@ -1,4 +1,10 @@
-compliance_map:
+#
+---
+compliance_markup::enforcement:
+  - disa
+  - stig
+  - nist
+compliance_markup::compliance_map:
   version: '1.0.0'
   disa:
     compliance_markup::test::testvariable:

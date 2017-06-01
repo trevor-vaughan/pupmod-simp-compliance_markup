@@ -1,15 +1,53 @@
+# vim: set expandtab ts=2 sw=2:
 class Hiera
   module Backend
     class Compliance_markup_backend
       require 'deep_merge'
-
       def initialize
+        filename = File.dirname(File.dirname(File.dirname(__FILE__))) + "/puppetx/simp/compliance_mapper.rb"
+        self.instance_eval(File.read(filename),filename)
         Hiera.debug('Hiera Compliance Map backend starting')
         self.class.instance_variable_set('@compliance_map_recursion_lock', false)
       end
 
       def lookup(key, scope, order_override, resolution_type, context)
-        require 'pry'
+        answer = :not_found
+        if (key == "lookup_options")
+          throw :no_such_key
+        end
+        begin
+          answer = enforcement(key) do |lookup, default|
+            rscope = scope.real
+            retval = rscope.call_function('lookup', [lookup, { "default_value" => default }])
+          end
+        rescue
+            throw :no_such_key
+        end
+        if (answer == :not_found)
+          throw :no_such_key
+        end
+        return answer
+      end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      def orig_lookup(key, scope, order_override, resolution_type, context)
         Hiera.debug("Looking up #{key} in Compliance Map backend")
 
         answer = nil
@@ -59,13 +97,13 @@ class Hiera
             if !compliance_profiles_to_enforce || compliance_profiles_to_enforce.empty?
               begin
                 global_profile_list = Array(scope.real.call_function('lookup',
-                  [
-                    'enforce_compliance_profile',
-                    {
-                      'default_value' => []
-                    }
-                  ]
-                ))
+                                                                     [
+                                                                       'enforce_compliance_profile',
+                                                                       {
+                                                                         'default_value' => []
+                                                                       }
+                ]
+                                                                    ))
 
                 module_profile_list = Array(compliance_markup_resource[:enforce_profiles])
 
@@ -85,14 +123,14 @@ class Hiera
 
             # Look it up if we can't find it globally
             global_map ||= scope.real.call_function('lookup',
-              [
-                'compliance_map',
-                {
-                  'merge' => 'deep',
-                  'default_value' => {}
-                }
-              ]
-            )
+                                                    [
+                                                      'compliance_map',
+                                                      {
+                                                        'merge' => 'deep',
+                                                        'default_value' => {}
+                                                      }
+            ]
+                                                   )
 
             # If we don't have a resource and we didn't find anything at the
             # Global level, then we can't find anything at all so bail

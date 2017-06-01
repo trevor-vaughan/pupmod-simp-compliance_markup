@@ -1,0 +1,28 @@
+
+[1mFrom:[0m /data/helio/code/github/simp/pupmod-simp-compliance_markup/vendor/ruby/2.3.0/gems/puppet-4.10.1/lib/puppet/pops/evaluator/runtime3_support.rb @ line 262 Puppet::Pops::Evaluator::Runtime3Support#external_call_function:
+
+    [1;34m253[0m: [32mdef[0m [1;34mexternal_call_function[0m(name, args, scope, &block)
+    [1;34m254[0m:   [1;34m# Call via 4x API if the function exists there[0m
+    [1;34m255[0m:   loaders = scope.compiler.loaders
+    [1;34m256[0m:   [1;34m# Since this is a call from non puppet code, it is not possible to relate it to a module loader[0m
+    [1;34m257[0m:   [1;34m# It is known where the call originates by using the scope associated module - but this is the calling scope[0m
+    [1;34m258[0m:   [1;34m# and it does not defined the visibility of functions from a ruby function's perspective. Instead,[0m
+    [1;34m259[0m:   [1;34m# this is done from the perspective of the environment.[0m
+    [1;34m260[0m:   loader = loaders.private_environment_loader
+    [1;34m261[0m:   [32mif[0m loader && func = loader.load([33m:function[0m, name)
+ => [1;34m262[0m:     [1;34;4mPuppet[0m::[1;34;4mUtil[0m::[1;34;4mProfiler[0m.profile(name, [[33m:functions[0m, name]) [32mdo[0m
+    [1;34m263[0m:       [32mreturn[0m func.call(scope, *args, &block)
+    [1;34m264[0m:     [32mend[0m
+    [1;34m265[0m:   [32mend[0m
+    [1;34m266[0m: 
+    [1;34m267[0m:   [1;34m# Call via 3x API if function exists there[0m
+    [1;34m268[0m:   raise [1;34;4mArgumentError[0m, [31m[1;31m"[0m[31mUnknown function '#{name}[0m[31m'[1;31m"[0m[31m[0m [32munless[0m [1;34;4mPuppet[0m::[1;34;4mParser[0m::[1;34;4mFunctions[0m.function(name)
+    [1;34m269[0m: 
+    [1;34m270[0m:   [1;34m# Arguments must be mapped since functions are unaware of the new and magical creatures in 4x.[0m
+    [1;34m271[0m:   [1;34m# NOTE: Passing an empty string last converts nil/:undef to empty string[0m
+    [1;34m272[0m:   mapped_args = [1;34;4mRuntime3FunctionArgumentConverter[0m.map_args(args, scope, [31m[1;31m'[0m[31m[1;31m'[0m[31m[0m)
+    [1;34m273[0m:   result = scope.send([31m[1;31m"[0m[31mfunction_#{name}[0m[31m[1;31m"[0m[31m[0m, mapped_args, &block)
+    [1;34m274[0m:   [1;34m# Prevent non r-value functions from leaking their result (they are not written to care about this)[0m
+    [1;34m275[0m:   [1;34;4mPuppet[0m::[1;34;4mParser[0m::[1;34;4mFunctions[0m.rvalue?(name) ? result : [1;36mnil[0m
+    [1;34m276[0m: [32mend[0m
+
