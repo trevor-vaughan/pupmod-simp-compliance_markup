@@ -6,17 +6,7 @@ describe 'compliance_markup' do
       let(:report_version) { '1.0.1' }
 
       context "on #{os}" do
-
-=begin
-        # This needs to be called as the very last item of a compile
-        let(:post_condition) {<<-EOM
-            include 'compliance_markup'
-          EOM
-        }
-=end
-
         context 'with data in modules' do
-
           before(:each) do
             @server_report_dir = Dir.mktmpdir
 
@@ -37,11 +27,15 @@ describe 'compliance_markup' do
             File.exist?(@server_report_dir) && FileUtils.remove_entry(@server_report_dir)
           end
 
-          let(:report) {
+          let(:raw_report) {
             # There can be only one
             report_file = "#{params['options']['server_report_dir']}/#{facts[:fqdn]}/compliance_report.yaml"
 
-            @report = YAML.load_file(report_file)
+            File.read(report_file)
+          }
+
+          let(:report) {
+            @report = YAML.load(raw_report)
 
             @report
           }
@@ -90,6 +84,39 @@ describe 'compliance_markup' do
 
                 it 'should have a failing check' do
                   expect( report['compliance_profiles']['nist_800_53_rev4']['non_compliant'] ).to_not be_empty
+                end
+
+                it 'should not have ruby serialized objects in the output' do
+                  expect(raw_report).to_not match(/!ruby/)
+                end
+
+                context 'when dumping the catalog compliance_map' do
+                  let(:catalog_dump) {
+                    # There can be only one
+                    File.read("#{params['options']['server_report_dir']}/#{facts[:fqdn]}/catalog_compliance_map.yaml")
+                  }
+
+                  let(:params){
+                    params = @default_params.dup
+                    params['options']['catalog_to_compliance_map'] = true
+                    params
+                  }
+
+                  it 'should have a generated catlaog' do
+                    expect(File).to exist("#{params['options']['server_report_dir']}/#{facts[:fqdn]}/catalog_compliance_map.yaml")
+
+                    expect(catalog_dump).to match(/GENERATED/)
+                  end
+
+                  it 'should not have Ruby serialized objects in the dump' do
+                    expect(catalog_dump).to_not match(/!ruby/)
+                  end
+
+                  it 'should be valid YAML' do
+                    expect {
+                      YAML.load(catalog_dump)
+                    }.to_not raise_exception
+                  end
                 end
               end
             end
@@ -298,7 +325,7 @@ describe 'compliance_markup' do
                   expect( report['compliance_profiles']['other_profile'] ).to_not be_empty
                 end
 
-                it 'should have a compliance section for the "other" profile' do
+                it 'should have a compliant section for the "other" profile' do
                   expect( report['compliance_profiles']['other_profile']['compliant'] ).to be_empty
                 end
 

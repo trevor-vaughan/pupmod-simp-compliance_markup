@@ -140,6 +140,16 @@ A String, or Array that denotes which types of reports should be generated.
   * *custom_entries*: Any one-off custom calls to compliance_map will be
   reported.
 
+#### site_data
+
+*Default*: None
+
+A valid *Hash* that will be converted *as passed* and emitted into your node
+compliance report.
+
+This can be used to add site-specific or other information to the report that
+may be useful for post-processing.
+
 #### client_report
 
 *Default*: `false`
@@ -168,6 +178,18 @@ An Absolute Path that specifies the location on the *server* where the reports
 should be stored.
 
 A directory will be created for each FQDN that has a report.
+
+#### catalog_to_compliance_map
+
+*Default*: false
+
+A Boolean which, if set, will dump a compatible compliance_map of *all*
+resources and defines that are in the current catalog.
+
+This will be written to ``server_report_dir/<client_fqdn>`` as ``catalog_compliance_map``.
+Old versions will be overwritten.
+
+NOTE: This is an experimental feature and subject to change without notice.
 
 ## Reference
 

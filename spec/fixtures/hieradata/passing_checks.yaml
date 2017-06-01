@@ -4,7 +4,7 @@
 # These should all pass
 
 compliance_map :
-  version : '1.0.0'
+  version : '1.0.1'
 
   test_profile :
     test1::arg1_1 :

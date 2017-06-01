@@ -3,13 +3,13 @@
 # This class should be included *after* all other classes in your site so that
 # the mapper can properly analyze the standing catalog.
 #
-# @param validate_profiles
-#   Compliance profiles that you wish to validate against
-#
 # @param compliance_map
 #   The compliance Hash to which to map
 #
-#   * This defaults to data in modules
+#   * This defaults to *Data In Modules*
+#
+# @param validate_profiles
+#   Compliance profiles that you wish to validate against
 #
 # @param report_types
 #   The types of entries that you want to report on
@@ -56,8 +56,9 @@
 #
 #   * If specified, various other options may be ignored
 class compliance_markup (
+  # $compliance_map is in module data
+  Hash                           $compliance_map,
   Optional[Array[String[1]]]     $validate_profiles     = undef,
-  Hash                           $compliance_map        = {},
   Array[
     Enum[
       'full',

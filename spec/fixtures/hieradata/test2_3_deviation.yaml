@@ -3,7 +3,7 @@
 #
 # These should all pass
 
-'compliance_map' :
+compliance_markup::compliance_map :
   'test_profile' :
     test1::arg1_1 :
       'identifiers' :
