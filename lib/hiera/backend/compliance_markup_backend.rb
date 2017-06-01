@@ -12,10 +12,17 @@ class Hiera
 
       def lookup(key, scope, order_override, resolution_type, context)
         answer = :not_found
+        if (self.class.instance_variable_get('@compliance_map_recursion_lock'))
+          Hiera.debug("Compliance Map avoiding recursion loop while looking for #{key}")
+
+          throw :no_such_key
+        end
+
         if (key == "lookup_options")
           throw :no_such_key
         end
         begin
+          self.class.instance_variable_set('@compliance_map_recursion_lock', true)
           answer = enforcement(key) do |lookup, default|
             rscope = scope.real
             retval = rscope.call_function('lookup', [lookup, { "default_value" => default }])
@@ -23,6 +30,7 @@ class Hiera
         rescue
             throw :no_such_key
         end
+        self.class.instance_variable_set('@compliance_map_recursion_lock', false)
         if (answer == :not_found)
           throw :no_such_key
         end
@@ -52,7 +60,7 @@ class Hiera
 
         answer = nil
 
-        if (key =~ /^compliance_markup::compliance_map/) || self.class.instance_variable_get('@compliance_map_recursion_lock')
+        if (self.class.instance_variable_get('@compliance_map_recursion_lock'))
           Hiera.debug("Compliance Map avoiding recursion loop while looking for #{key}")
 
           throw :no_such_key
@@ -185,7 +193,6 @@ class Hiera
         end
 
         # Reset for future calls
-        self.class.instance_variable_set('@compliance_map_recursion_lock', false)
 
         throw :no_such_key unless answer
 

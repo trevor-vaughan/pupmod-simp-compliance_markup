@@ -4,7 +4,7 @@ test_name 'compliance_markup class enforcement'
 
 describe 'compliance_markup class enforcement' do
 
-  def set_profile_data_on(host, profile_name, profile_data)
+  def set_profile_data_on(host, profile_data)
     hiera_yaml = <<-EOM
 ---
 :backends:
@@ -15,7 +15,6 @@ describe 'compliance_markup class enforcement' do
 :compliance_markup:
   :datadir: "/etc/puppetlabs/code/environments/%{environment}/hieradata"
 :hierarchy:
-  - "compliance_profiles/%{compliance_profile}"
   - default
 :logger: console
     EOM
@@ -32,7 +31,7 @@ describe 'compliance_markup class enforcement' do
     Dir.mktmpdir do |dir|
       tmp_profiles = File.join(dir, 'compliance_profiles')
       FileUtils.mkdir_p(tmp_profiles)
-      File.open(File.join(tmp_profiles, profile_name + '.yaml'), 'w') do |fh|
+      File.open(File.join(tmp_profiles, "default" + '.yaml'), 'w') do |fh|
         fh.puts(profile_data)
         fh.flush
 
@@ -85,40 +84,12 @@ compliance_markup::compliance_map:
     EOS
   }
 
-  let(:extra_hieradata) { <<-EOF
----
-compliance_markup::enforcement:
-  - nist
-  - disa
-    EOF
-  }
-
   hosts.each do |host|
-    context 'base setup' do
-      # Using puppet_apply as a helper
-      it 'should work with no errors' do
-        apply_manifest_on(host, 'include "useradd"', :catch_failures => true)
-      end
-
-      it 'should be idempotent' do
-        apply_manifest_on(host, base_manifest, :catch_changes => true)
-      end
-
-      it 'should have /bin/sh in /etc/shells' do
-        result = on(host, 'cat /etc/shells').output.strip
-        expect(result).to match(%r(/bin/sh))
-      end
-
-      it 'should not have /bin/test_shell in /etc/shells' do
-        result = on(host, 'cat /etc/shells').output.strip
-        expect(result).to_not match(%r(/bin/test_shell))
-      end
-    end
 
     context 'with a single compliance map' do
       # Using puppet_apply as a helper
       it 'should work with no errors' do
-        set_profile_data_on(host, 'base_profile', base_hieradata)
+        set_profile_data_on(host, base_hieradata)
         apply_manifest_on(host, base_manifest, :catch_failures => true)
       end
 
@@ -139,33 +110,6 @@ compliance_markup::enforcement:
       it 'should not have /bin/stacked_shell in /etc/shells' do
         result = on(host, 'cat /etc/shells').output.strip
         expect(result).to_not match(%r(/bin/stacked_shell))
-      end
-    end
-
-    context 'with a single compliance map' do
-      # Using puppet_apply as a helper
-      it 'should work with no errors' do
-        set_profile_data_on(host, 'extra_profile', extra_hieradata)
-        apply_manifest_on(host, extra_manifest, :catch_failures => true)
-      end
-
-      it 'should be idempotent' do
-        apply_manifest_on(host, extra_manifest, :catch_changes => true)
-      end
-
-      it 'should have /bin/sh in /etc/shells' do
-        result = on(host, 'cat /etc/shells').output.strip
-        expect(result).to match(%r(/bin/sh))
-      end
-
-      it 'should have /bin/test_shell in /etc/shells' do
-        result = on(host, 'cat /etc/shells').output.strip
-        expect(result).to match(%r(/bin/test_shell))
-      end
-
-      it 'should not have /bin/extra_shell in /etc/shells' do
-        result = on(host, 'cat /etc/shells').output.strip
-        expect(result).to_not match(%r(/bin/extra_shell))
       end
     end
   end
