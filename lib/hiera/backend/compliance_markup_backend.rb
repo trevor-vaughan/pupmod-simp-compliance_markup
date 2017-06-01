@@ -1,6 +1,6 @@
 class Hiera
   module Backend
-    class Compliance_markup_enforce_backend
+    class Compliance_markup_backend
       require 'deep_merge'
 
       def initialize
