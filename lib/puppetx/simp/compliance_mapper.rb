@@ -26,15 +26,17 @@ def enforcement(key, &block)
       v1_compliance_map.merge!(top_scope_compliance_map)
 
       profile_list.each do |profile|
-        if (v1_compliance_map.key?(profile))
-          # Handle a knockout prefix
-          if (v1_compliance_map[profile].key?("--" + key))
-            break
-          end
-          if (v1_compliance_map[profile].key?(key))
-            if (v1_compliance_map[profile][key].key?("value"))
-              retval = v1_compliance_map[profile][key]["value"]
+        if (profile != /^v[0-9]+/)
+          if (v1_compliance_map.key?(profile))
+            # Handle a knockout prefix
+            if (v1_compliance_map[profile].key?("--" + key))
               break
+            end
+            if (v1_compliance_map[profile].key?(key))
+              if (v1_compliance_map[profile][key].key?("value"))
+                retval = v1_compliance_map[profile][key]["value"]
+                break
+              end
             end
           end
         end
