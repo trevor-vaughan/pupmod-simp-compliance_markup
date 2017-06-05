@@ -110,5 +110,5 @@ acceptance-test:
     - beaker
   script: 
     - bundle install --no-binstubs --path=vendor
-    - bundle update
-    - bundle exec rake acceptance
+    - PUPPET_VERSION=4.10.1 bundle update
+    - PUPPET_VERSION=4.10.1 bundle exec rake acceptance

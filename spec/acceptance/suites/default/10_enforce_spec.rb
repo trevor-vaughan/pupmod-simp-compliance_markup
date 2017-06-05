@@ -4,8 +4,8 @@ test_name 'compliance_markup class enforcement'
 
 describe 'compliance_markup class enforcement' do
 
-  def set_profile_data_on(host, profile_data)
-    hiera_yaml = <<-EOM
+	def set_profile_data_on(host, profile_data)
+		hiera_yaml = <<-EOM
 ---
 :backends:
   - yaml
@@ -17,36 +17,36 @@ describe 'compliance_markup class enforcement' do
 :hierarchy:
   - default
 :logger: console
-    EOM
+		EOM
 
-    Dir.mktmpdir do |dir|
-      tmp_yaml = File.join(dir, 'hiera.yaml')
-      File.open(tmp_yaml, 'w') do |fh|
-        fh.puts hiera_yaml
-      end
+		Dir.mktmpdir do |dir|
+			tmp_yaml = File.join(dir, 'hiera.yaml')
+			File.open(tmp_yaml, 'w') do |fh|
+				fh.puts hiera_yaml
+			end
 
-      host.do_scp_to(tmp_yaml, '/etc/puppetlabs/puppet/hiera.yaml', {})
-    end
+			host.do_scp_to(tmp_yaml, '/etc/puppetlabs/puppet/hiera.yaml', {})
+		end
 
-    Dir.mktmpdir do |dir|
-      File.open(File.join(dir, "default" + '.yaml'), 'w') do |fh|
-        fh.puts(profile_data)
-        fh.flush
+		Dir.mktmpdir do |dir|
+			File.open(File.join(dir, "default" + '.yaml'), 'w') do |fh|
+				fh.puts(profile_data)
+				fh.flush
 
-	default_file = "/etc/puppetlabs/code/environments/production/hieradata/default.yaml"
+				default_file = "/etc/puppetlabs/code/environments/production/hieradata/default.yaml"
 
-	host.do_scp_to(dir + "/default.yaml", default_file, {})
-      end
-    end
-  end
+				host.do_scp_to(dir + "/default.yaml", default_file, {})
+			end
+		end
+	end
 
-  let(:base_manifest) {
-    <<-EOS
+	let(:base_manifest) {
+		<<-EOS
       include 'useradd'
-    EOS
-  }
+		EOS
+	}
 
-  let(:base_hieradata) { <<-EOF
+	let(:base_hieradata) { <<-EOF
 ---
 compliance_markup::enforcement:
   - disa
@@ -56,55 +56,105 @@ compliance_markup::compliance_map:
   disa:
     useradd::shells:
       identifiers:
-        - FOO
-        - BAR
+	- FOO
+	- BAR
       notes: Nothing fun really
       value:
-        - /bin/sh
-        - /bin/bash
-        - /sbin/nologin
-        - /bin/test_shell
+	- /bin/sh
+	- /bin/bash
+	- /sbin/nologin
+	- /bin/test_shell
   nist:
     useradd::shells:
       identifiers:
-        - FOO2
-        - BAR2
+	- FOO2
+	- BAR2
       notes: Nothing fun really
       value:
-        - /bin/extra_shell
-    EOF
-  }
+	- /bin/extra_shell
+			EOF
+	}
+	let(:extra_hieradata) { <<-EOF
+---
+compliance_markup::enforcement:
+  - nist
+  - disa
 
-  let(:extra_manifest) {
-    <<-EOS
+compliance_markup::compliance_map:
+  version: 1.0.0
+  disa:
+    useradd::shells:
+      identifiers:
+	- FOO
+	- BAR
+      notes: Nothing fun really
+      value:
+	- /bin/sh
+	- /bin/bash
+	- /sbin/nologin
+	- /bin/test_shell
+  nist:
+    useradd::shells:
+      identifiers:
+	- FOO2
+	- BAR2
+      notes: Nothing fun really
+      value:
+	- /bin/extra_shell
+			 EOF
+	}
+
+	let(:extra_manifest) {
+		<<-EOS
       # Needed for Hiera
       include 'useradd'
-    EOS
-  }
+		EOS
+	}
 
-  hosts.each do |host|
+	hosts.each do |host|
 
-    context 'with a single compliance map' do
-      # Using puppet_apply as a helper
-      it 'should work with no errors' do
-        set_profile_data_on(host, base_hieradata)
-        apply_manifest_on(host, base_manifest, :catch_failures => true)
-      end
+		context 'with a single compliance map' do
+			# Using puppet_apply as a helper
+			it 'should work with no errors' do
+				set_profile_data_on(host, base_hieradata)
+				apply_manifest_on(host, base_manifest, :catch_failures => true)
+			end
 
-      it 'should be idempotent' do
-        apply_manifest_on(host, base_manifest, :catch_changes => true)
-      end
+			it 'should be idempotent' do
+				apply_manifest_on(host, base_manifest, :catch_changes => true)
+			end
 
-      it 'should have /bin/sh in /etc/shells' do
-        result = on(host, 'cat /etc/shells').output.strip
-        expect(result).to match(%r(/bin/sh))
-      end
-
-      it 'should have /bin/test_shell in /etc/shells' do
-        result = on(host, 'cat /etc/shells').output.strip
-        expect(result).to match(%r(/bin/test_shell))
-      end
-
-    end
-  end
+			it 'should have /bin/sh in /etc/shells' do
+				apply_manifest_on(host, base_manifest, :catch_failures => true)
+				result = on(host, 'cat /etc/shells').output.strip
+				expect(result).to match(%r(/bin/sh))
+			end
+			context 'when disa is higher priority' do
+				it 'should have /bin/test_shell in /etc/shells' do
+					apply_manifest_on(host, base_manifest, :catch_failures => true)
+					result = on(host, 'cat /etc/shells').output.strip
+					expect(result).to match(%r(/bin/test_shell))
+				end
+				it 'should not have /bin/extra_shell in /etc/shells' do
+					apply_manifest_on(host, base_manifest, :catch_failures => true)
+					result = on(host, 'cat /etc/shells').output.strip
+					expect(result).to_not match(%r(/bin/extra_shell))
+				end
+			end
+			context 'when nist is higher priority' do
+				it 'should have /bin/extra_shell in /etc/shells' do
+					set_profile_data_on(host, extra_hieradata)
+					apply_manifest_on(host, base_manifest, :catch_failures => true)
+					result = on(host, 'cat /etc/shells').output.strip
+					expect(result).to match(%r(/bin/extra_shell))
+				end
+				it 'should not have /bin/extra_shell in /etc/shells' do
+					set_profile_data_on(host, extra_hieradata)
+					apply_manifest_on(host, base_manifest, :catch_failures => true)
+					result = on(host, 'cat /etc/shells').output.strip
+					expect(result).to_not match(%r(/bin/extra_shell))
+				end
+			end
+		end
+	end
 end
