@@ -94,7 +94,7 @@ acceptance-test-4.7:
     - beaker
   script: 
     - bundle install --no-binstubs --path=vendor
-    - bundle update
+    - PUPPET_VERSION=4.7 bundle update
     - PUPPET_VERSION=4.7 bundle exec rake acceptance
 acceptance-test-4.8: 
   stage: test
@@ -102,7 +102,7 @@ acceptance-test-4.8:
     - beaker
   script: 
     - bundle install --no-binstubs --path=vendor
-    - bundle update
+    - PUPPET_VERSION=4.8 bundle update
     - PUPPET_VERSION=4.8 bundle exec rake acceptance
 acceptance-test: 
   stage: test
