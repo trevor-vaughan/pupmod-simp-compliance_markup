@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby -S rspec
 # vim: set expandtab ts=2 sw=2:
 require 'spec_helper'
+require 'semantic_puppet'
 puppetver = SemanticPuppet::Version.parse(Puppet.version)
 requiredver = SemanticPuppet::Version.parse("4.9.0")
 puts puppetver
