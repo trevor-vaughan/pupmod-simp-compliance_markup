@@ -28,6 +28,7 @@ class Hiera
             retval = rscope.call_function('lookup', [lookup, { "default_value" => default }])
           end
         rescue
+            self.class.instance_variable_set('@compliance_map_recursion_lock', false)
             throw :no_such_key
         end
         self.class.instance_variable_set('@compliance_map_recursion_lock', false)

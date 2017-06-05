@@ -29,15 +29,13 @@ describe 'compliance_markup class enforcement' do
     end
 
     Dir.mktmpdir do |dir|
-      tmp_profiles = File.join(dir, 'compliance_profiles')
-      FileUtils.mkdir_p(tmp_profiles)
-      File.open(File.join(tmp_profiles, "default" + '.yaml'), 'w') do |fh|
+      File.open(File.join(dir, "default" + '.yaml'), 'w') do |fh|
         fh.puts(profile_data)
         fh.flush
 
-        hiera_dir = File.join(host.puppet['codedir'], 'environments', 'production', 'hieradata')
+	default_file = "/etc/puppetlabs/code/environments/production/hieradata/default.yaml"
 
-        host.do_scp_to(tmp_profiles, hiera_dir, {})
+	host.do_scp_to(dir + "/default.yaml", default_file, {})
       end
     end
   end
@@ -107,10 +105,6 @@ compliance_markup::compliance_map:
         expect(result).to match(%r(/bin/test_shell))
       end
 
-      it 'should not have /bin/stacked_shell in /etc/shells' do
-        result = on(host, 'cat /etc/shells').output.strip
-        expect(result).to_not match(%r(/bin/stacked_shell))
-      end
     end
   end
 end
