@@ -56,22 +56,22 @@ compliance_markup::compliance_map:
   disa:
     useradd::shells:
       identifiers:
-	- FOO
-	- BAR
+        - FOO
+        - BAR
       notes: Nothing fun really
       value:
-	- /bin/sh
-	- /bin/bash
-	- /sbin/nologin
-	- /bin/test_shell
+        - /bin/sh
+        - /bin/bash
+        - /sbin/nologin
+        - /bin/test_shell
   nist:
     useradd::shells:
       identifiers:
-	- FOO2
-	- BAR2
+        - FOO2
+        - BAR2
       notes: Nothing fun really
       value:
-	- /bin/extra_shell
+        - /bin/extra_shell
 			EOF
 	}
 	let(:extra_hieradata) { <<-EOF
@@ -85,30 +85,23 @@ compliance_markup::compliance_map:
   disa:
     useradd::shells:
       identifiers:
-	- FOO
-	- BAR
+        - FOO
+        - BAR
       notes: Nothing fun really
       value:
-	- /bin/sh
-	- /bin/bash
-	- /sbin/nologin
-	- /bin/test_shell
+        - /bin/sh
+        - /bin/bash
+        - /sbin/nologin
+        - /bin/test_shell
   nist:
     useradd::shells:
       identifiers:
-	- FOO2
-	- BAR2
+        - FOO2
+        - BAR2
       notes: Nothing fun really
       value:
-	- /bin/extra_shell
-			 EOF
-	}
-
-	let(:extra_manifest) {
-		<<-EOS
-      # Needed for Hiera
-      include 'useradd'
-		EOS
+        - /bin/extra_shell
+EOF
 	}
 
 	hosts.each do |host|
@@ -148,11 +141,11 @@ compliance_markup::compliance_map:
 					result = on(host, 'cat /etc/shells').output.strip
 					expect(result).to match(%r(/bin/extra_shell))
 				end
-				it 'should not have /bin/extra_shell in /etc/shells' do
+				it 'should not have /bin/test_shell in /etc/shells' do
 					set_profile_data_on(host, extra_hieradata)
 					apply_manifest_on(host, base_manifest, :catch_failures => true)
 					result = on(host, 'cat /etc/shells').output.strip
-					expect(result).to_not match(%r(/bin/extra_shell))
+					expect(result).to_not match(%r(/bin/test_shell))
 				end
 			end
 		end
