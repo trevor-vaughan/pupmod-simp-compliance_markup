@@ -9,7 +9,7 @@ describe 'compliance_markup::hiera_backend' do
       errored = false
       ex = nil
       begin
-        result = subject.execute("compliance_markup::test::nonexistent", Puppet::Pops::Lookup::Context.new('rp_env', 'compliance_markup'))
+        result = subject.execute("compliance_markup::test::nonexistent", {}, Puppet::Pops::Lookup::Context.new('rp_env', 'compliance_markup'))
       rescue Exception => e
         ex = e
         errored = true
@@ -20,7 +20,7 @@ describe 'compliance_markup::hiera_backend' do
       errored = false
       ex = nil
       begin
-        result = subject.execute("compliance_markup::test::nonexistent", Puppet::Pops::Lookup::Context.new('rp_env', 'compliance_markup'))
+        result = subject.execute("compliance_markup::test::nonexistent", {}, Puppet::Pops::Lookup::Context.new('rp_env', 'compliance_markup'))
       rescue Exception => e
         ex = e
         errored = true
@@ -34,7 +34,7 @@ describe 'compliance_markup::hiera_backend' do
       errored = false
       ex = nil
       begin
-        result = subject.execute("compliance_markup::test::testvariable", Puppet::Pops::Lookup::Context.new('rp_env', 'compliance_markup'))
+        result = subject.execute("compliance_markup::test::testvariable", {}, Puppet::Pops::Lookup::Context.new('rp_env', 'compliance_markup'))
       rescue Exception => e
         ex = e
         errored = true
@@ -45,7 +45,7 @@ describe 'compliance_markup::hiera_backend' do
       errored = false
       ex = nil
       begin
-        result = subject.execute("compliance_markup::test::testvariable", Puppet::Pops::Lookup::Context.new('rp_env', 'compliance_markup'))
+        result = subject.execute("compliance_markup::test::testvariable", {}, Puppet::Pops::Lookup::Context.new('rp_env', 'compliance_markup'))
       rescue Exception => e
         ex = e
         errored = true
@@ -56,7 +56,7 @@ describe 'compliance_markup::hiera_backend' do
       errored = false
       ex = nil
       begin
-        result = subject.execute("compliance_markup::test::testvariable", Puppet::Pops::Lookup::Context.new('rp_env', 'compliance_markup'))
+        result = subject.execute("compliance_markup::test::testvariable", {}, Puppet::Pops::Lookup::Context.new('rp_env', 'compliance_markup'))
       rescue Exception => e
         ex = e
         errored = true

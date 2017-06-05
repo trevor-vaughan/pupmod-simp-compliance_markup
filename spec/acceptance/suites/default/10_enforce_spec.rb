@@ -60,9 +60,6 @@ compliance_markup::compliance_map:
         - BAR
       notes: Nothing fun really
       value:
-        - /bin/sh
-        - /bin/bash
-        - /sbin/nologin
         - /bin/test_shell
   nist:
     useradd::shells:
@@ -89,9 +86,6 @@ compliance_markup::compliance_map:
         - BAR
       notes: Nothing fun really
       value:
-        - /bin/sh
-        - /bin/bash
-        - /sbin/nologin
         - /bin/test_shell
   nist:
     useradd::shells:
