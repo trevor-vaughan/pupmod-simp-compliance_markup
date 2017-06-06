@@ -3,7 +3,7 @@
 require 'spec_helper'
 require 'semantic_puppet'
 puppetver = SemanticPuppet::Version.parse(Puppet.version)
-requiredver = SemanticPuppet::Version.parse("4.9.0")
+requiredver = SemanticPuppet::Version.parse("4.7.0")
 puts puppetver
 if (puppetver > requiredver)
   describe 'compliance_markup::hiera_backend' do
