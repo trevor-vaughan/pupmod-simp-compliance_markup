@@ -137,7 +137,7 @@ unless PuppetX.const_get("SIMP#{Puppet[:environment]}").const_defined?('Complian
             'non_compliant'                 => num_non_compliant,
             'percent_compliant'             => percent_compliant,
             'documented_missing_resources'  => @unmapped_resources[profile].count,
-            'documented_missing_parameters' => @ref_misses.count
+            'documented_missing_parameters' => @ref_misses[profile].count
           }
 
           unless report_types.include?('full')

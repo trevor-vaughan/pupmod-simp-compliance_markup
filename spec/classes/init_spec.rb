@@ -309,7 +309,7 @@ describe 'compliance_markup' do
                   expect( report['compliance_profiles'][profile_name]['compliant'] ).to_not be_empty
                 end
 
-                it 'should have a non_compliant report section' do
+                it 'should not include an empty non_compliant report section' do
                   expect( report['compliance_profiles'][profile_name]['non_compliant'] ).to be_nil
                 end
 
@@ -325,19 +325,19 @@ describe 'compliance_markup' do
                   expect( report['compliance_profiles']['other_profile'] ).to_not be_empty
                 end
 
-                it 'should have a compliant section for the "other" profile' do
+                it 'should not include an empty compliant section for the "other" profile' do
                   expect( report['compliance_profiles']['other_profile']['compliant'] ).to be_nil
                 end
 
-                it 'should have a non_compliant section for the "other" profile' do
+                it 'should not include an empty non_compliant section for the "other" profile' do
                   expect( report['compliance_profiles']['other_profile']['non_compliant'] ).to be_nil
                 end
 
-                it 'should have a documented_missing_resources section for the "other" profile' do
+                it 'should not include an empty documented_missing_resources section for the "other" profile' do
                   expect( report['compliance_profiles']['other_profile']['documented_missing_resources'] ).to be_nil
                 end
 
-                it 'should have a documented_missing_parameters section for the "other" profile' do
+                it 'should not include an empty documented_missing_parameters section for the "other" profile' do
                   expect( report['compliance_profiles']['other_profile']['documented_missing_parameters'] ).to be_nil
                 end
 
@@ -363,15 +363,15 @@ describe 'compliance_markup' do
                   expect( report['compliance_profiles'][profile_name] ).to_not be_empty
                 end
 
-                it 'should have a compliant report section' do
+                it 'should not include an empty compliant report section' do
                   expect( report['compliance_profiles'][profile_name]['compliant'] ).to be_nil
                 end
 
-                it 'should have a non_compliant report section' do
+                it 'should not include an empty non_compliant report section' do
                   expect( report['compliance_profiles'][profile_name]['non_compliant'] ).to be_nil
                 end
 
-                it 'should have a documented_missing_resources section' do
+                it 'should not include an empty documented_missing_resources section' do
                   expect( report['compliance_profiles'][profile_name]['documented_missing_resources'] ).to be_nil
                 end
 
