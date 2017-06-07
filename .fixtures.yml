@@ -7,8 +7,5 @@ fixtures:
     stdlib:
       repo: "https://github.com/simp/puppetlabs-stdlib"
       branch: "master"
-    useradd:
-      repo: "https://github.com/simp/pupmod-simp-useradd"
-      branch: "master"
   symlinks:
     compliance_markup: "#{source_dir}"

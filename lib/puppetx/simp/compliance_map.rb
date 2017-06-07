@@ -72,6 +72,7 @@ unless PuppetX.const_get("SIMP#{Puppet[:environment]}").const_defined?('Complian
 
         @valid_profiles.sort.each do |profile|
           @compliance_map['compliance_profiles'][profile] ||= ordered_hash
+          @compliance_map['compliance_profiles'][profile]['summary'] ||= ordered_hash
           @compliance_map['compliance_profiles'][profile]['compliant'] ||= ordered_hash
           @compliance_map['compliance_profiles'][profile]['non_compliant'] ||= ordered_hash
           @compliance_map['compliance_profiles'][profile]['documented_missing_resources'] ||= Array.new()
@@ -123,6 +124,22 @@ unless PuppetX.const_get("SIMP#{Puppet[:environment]}").const_defined?('Complian
         report_types = @config[:report_types]
 
         @valid_profiles.each do |profile|
+
+          # Create the summary report
+          num_compliant     = formatted_map['compliance_profiles'][profile]['compliant'] ? formatted_map['compliance_profiles'][profile]['compliant'].keys.count : 0
+          num_non_compliant = formatted_map['compliance_profiles'][profile]['non_compliant'] ? formatted_map['compliance_profiles'][profile]['non_compliant'].keys.count : 0
+
+          total_checks = num_non_compliant + num_compliant
+          percent_compliant = total_checks == 0 ? 0 : ((num_compliant.to_f/total_checks) * 100).round(0)
+
+          formatted_map['compliance_profiles'][profile]['summary'] = {
+            'compliant'                     => num_compliant,
+            'non_compliant'                 => num_non_compliant,
+            'percent_compliant'             => percent_compliant,
+            'documented_missing_resources'  => @unmapped_resources[profile].count,
+            'documented_missing_parameters' => @ref_misses.count
+          }
+
           unless report_types.include?('full')
             # Remove the built up content that does not apply to this system
             ['compliant', 'non_compliant', 'custom_entries'].each do |report_type|
@@ -143,6 +160,13 @@ unless PuppetX.const_get("SIMP#{Puppet[:environment]}").const_defined?('Complian
               formatted_map['compliance_profiles'][profile]['documented_missing_parameters'] = @ref_misses[profile].sort
             end
           end
+
+          # Strip out anything not relevant to the report
+          formatted_map['compliance_profiles'][profile].delete_if{|k|
+            val = formatted_map['compliance_profiles'][profile][k]
+
+            val.nil? || val.empty?
+          }
         end
 
         return formatted_map
@@ -244,7 +268,7 @@ unless PuppetX.const_get("SIMP#{Puppet[:environment]}").const_defined?('Complian
               # Fail if the entry doesn't have the proper format
               required_metadata = ['identifiers','value']
               required_metadata.each do |md|
-                raise "#{@err_msg} Failed on #{profile} profile, #{resource_ref} #{ref_entry}, medatada #{md}" if ref_entry[md].nil?
+                raise "#{@err_msg} Failed on #{profile} profile, #{resource_ref} #{ref_entry}, metadata #{md}" if ref_entry[md].nil?
               end
 
               # Perform the actual matching
