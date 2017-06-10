@@ -1,3 +1,6 @@
+Sat Jun 10 2017 Trevor Vaughan <tvaughan@onyxpoint.com> - 2.1.1-0
+- Documented the report format in the README
+
 Tue Mar 23 2017 Trevor Vaughan <tvaughan@onyxpoint.com> - 2.1.0-0
 - Added client metadata to the compliance report for easier analysis
 - Fixed several minor processing bugs

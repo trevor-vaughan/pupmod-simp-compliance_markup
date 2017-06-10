@@ -118,6 +118,64 @@ The following parameters may be used to add your own compliance data:
                         include in the compliance report'
 ```
 
+### Report Format
+
+The compliance report is formatted as follows (YAML Representation):
+
+```yaml
+---
+# The API version of the report
+version: "1.0.1"
+fqdn: "my.system.fqdn"
+hostname: "my"
+ipaddress: "1.2.3.4"
+puppetserver_info: "my.puppet.server"
+compliance_profiles:
+  profile_name:
+    summary:
+      compliant: 80
+      non_compliant: 20
+      percent_compliant: 80
+      documented_missing_resources: 2
+      documented_missing_parameters: 1
+
+    compliant:
+      "Class[ClassName]":
+        parameters:
+          param1:
+            identifiers:
+              - ID 1
+              - ID 2
+            compliant_value: 'foo'
+            system_value: 'foo'
+
+    non_compliant:
+      "Class[BadClass]":
+        parameters:
+          bad_param:
+            identifiers:
+              - ID 3
+              - ID 4
+            compliant_value: 'bar'
+            system_value: 'baz'
+
+    documented_missing_resources:
+      - missing_class_one
+      - missing_class_two
+
+    documented_missing_parameters:
+      - "classname::param2"
+
+    custom_entries
+      "Class[CustomClass]":
+        location: "file.pp:123"
+        identifiers:
+          - My ID
+
+site_data:
+  completely: random user input
+```
+
 ### Options
 
 The `compliance_markup` class may take a number of options which must be passed
