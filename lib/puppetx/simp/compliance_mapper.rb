@@ -79,42 +79,9 @@ def enforcement(key, &block)
               # in Abacus
             end
 
-            # Pre-compile the values for each profile list array.
-            # We use hash.to_s, then create a hash named that in v1_compliance_map,
-            # that is a raw key => value mapping. This simplifies our code as we can assume
-            # that if the key exists, then the value is what we use. We also don't have to worry
-            # about exponential time issues since this is linearlly done once, not every time for
-            # every key.
 
             profile = profile_list.hash.to_s
-            unless (v1_compliance_map.key?(profile))
-              compile_start_time = Time.now
-              debug("compliance map for #{profile_list} not found, starting compiler")
-              table = {}
-              # Set the keys in reverse order. This means that [ 'disa', 'nist'] would prioritize
-              # disa values over nist. Only bother to store the highest priority value
-              profile_list.reverse.each do |profile_map|
-                if (profile_map != /^v[0-9]+/)
-                  if (v1_compliance_map.key?(profile_map))
-                    v1_compliance_map[profile_map].each do |key, entry|
-                      if (entry.key?("value"))
-                        # XXX ToDo: Generate a lookup_options hash, set to 'first', if the user specifies some
-                        # option that toggles it on. This would allow un-overridable enforcement at the hiera
-                        # layer (though it can still be overridden by resource-style class definitions
-                        table[key] = entry["value"]
-                      end
-                    end
-                  end
-                end
-              end
-              v1_compliance_map[profile] = table
-              compile_end_time = Time.now
-              debug("compiled compliance_map containing #{table.size} keys in #{compile_end_time - compile_start_time} seconds")
-              # This is necessary for hiera v5 since the cache
-              # is immutable.
-              cache(:v1_compliance_map, v1_compliance_map)
-            end
-
+            v1_compile(profile, profile_list, v1_compliance_map)
             if (v1_compliance_map.key?(profile))
               # Handle a knockout prefix
               unless (v1_compliance_map[profile].key?("--" + key))
@@ -134,6 +101,43 @@ def enforcement(key, &block)
     end
   end
   return retval
+end
+
+# Pre-compile the values for each profile list array.
+# We use hash.to_s, then create a hash named that in v1_compliance_map,
+# that is a raw key => value mapping. This simplifies our code as we can assume
+# that if the key exists, then the value is what we use. We also don't have to worry
+# about exponential time issues since this is linearlly done once, not every time for
+# every key.
+
+def v1_compile(profile, profile_list, v1_compliance_map)
+  unless (v1_compliance_map.key?(profile))
+    compile_start_time = Time.now
+    debug("compliance map for #{profile_list} not found, starting compiler")
+    table = {}
+    # Set the keys in reverse order. This means that [ 'disa', 'nist'] would prioritize
+    # disa values over nist. Only bother to store the highest priority value
+    profile_list.reverse.each do |profile_map|
+      if (profile_map != /^v[0-9]+/)
+        if (v1_compliance_map.key?(profile_map))
+          v1_compliance_map[profile_map].each do |key, entry|
+            if (entry.key?("value"))
+              # XXX ToDo: Generate a lookup_options hash, set to 'first', if the user specifies some
+              # option that toggles it on. This would allow un-overridable enforcement at the hiera
+              # layer (though it can still be overridden by resource-style class definitions
+              table[key] = entry["value"]
+            end
+          end
+        end
+      end
+    end
+    v1_compliance_map[profile] = table
+    compile_end_time = Time.now
+    debug("compiled compliance_map containing #{table.size} keys in #{compile_end_time - compile_start_time} seconds")
+    # This is necessary for hiera v5 since the cache
+    # is immutable.
+    cache(:v1_compliance_map, v1_compliance_map)
+  end
 end
 
 # These cache functions are assumed to be created by the wrapper
