@@ -13,7 +13,7 @@ describe 'compliance_markup::test' do
             if ['7'].include?(facts[:os][:release][:major])
 
               profiles = [ 'disa', 'nist']
-              profiles.each do |profile| 
+              profiles.each do |profile|
                 order = ([ profile ] + (profiles - [ profile ])).to_s
                 context "when order = #{order}" do
                   let(:facts) { facts }

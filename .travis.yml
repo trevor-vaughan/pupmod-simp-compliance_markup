@@ -25,22 +25,19 @@ before_install:
   - rm -f Gemfile.lock
 
 jobs:
-  allow_failures:
-    - env: STRICT_VARIABLES=yes TRUSTED_NODE_DATA=yes PUPPET_VERSION="~> 5.0"
-
   include:
-    - stage: lint
-      rvm: 2.1.9
+    - stage: spec
+      rvm: 2.4.1
+      env: STRICT_VARIABLES=yes TRUSTED_NODE_DATA=yes PUPPET_VERSION="~> 5"
       script:
+        - bundle exec rake check:dot_underscore
+        - bundle exec rake check:test_file
+        - bundle exec rake pkg:check_version
         - bundle exec rake metadata_lint
-
-    - stage: compare_tag
-      rvm: 2.1.9
-      script:
         - bundle exec rake compare_latest_tag
 
     - stage: spec
-      rvm: 2.1.9
+      rvm: 2.4.1
       env: STRICT_VARIABLES=yes TRUSTED_NODE_DATA=yes PUPPET_VERSION="~> 5.0"
       script:
         - bundle exec rake spec
@@ -74,10 +71,9 @@ jobs:
 
     # This needs to be last since we have an acceptance test
     - stage: deploy
-      rvm: 2.1.9
-      env: STRICT_VARIABLES=yes TRUSTED_NODE_DATA=yes PUPPET_VERSION="~> 4.8.2"
+      rvm: 2.4.1
       script:
-        - bundle exec rake spec
+        - true
       before_deploy:
         - "export PUPMOD_METADATA_VERSION=`ruby -r json -e \"puts JSON.parse(File.read('metadata.json')).fetch('version')\"`"
         - '[[ $TRAVIS_TAG =~ ^simp-${PUPMOD_METADATA_VERSION}$|^${PUPMOD_METADATA_VERSION}$ ]]'
@@ -95,5 +91,5 @@ jobs:
               secure: "vL1MNFrE7aazh/rEsSaHugCYYWXrJmsBuhMIP27CQ/EpBQ6wfWZhukZdkikZrmkIiJHHLi1HaQycKdW2AzcqN932iXOdjYtEA9eE/hO1VtGMYVobZFS4sh2Wtt8saVOg0tMPq45hjFHUe8FmgyrsjHBB+kl/fdfLVr+TiFCmWGXtZkjMlJxqPp+fyZZDrMoKoB7eSm3edOtqX7gONP3MEJ/wcHgCUTyspxI8sSXGl8IPwWNxU4LSgCwbvr/JzmDmKiK2AbSc7Q2+g7NrvZV39CbcV0IH4Uy4A+3fBBli/nPaidm/dvIvcYDacWF0UiXZTMvqd8tL4Z3Sf4vvB6NZ328ml97w233fLSHdLGn8qaIjmkK5x1UN9BRmA/WZbmkSSLWqwr6Cz+c4unik1NeQF2shpNZw8cGyh6IFnpIUbBsXPgxiIbb1HfoQCRFocTgkqpsbH7n8WpJkEdPpVgtJh51xILlbZibsI9U1YsfDjpZWXxUUObsANbAK0Z0Ep0wkzv31+9fSD7FlGOJ//GjqFRjW4inekCeUNyRbXTGIlDMeZyRKs/JZVndKr9AFestwkiM7AWWNFUKfSX5RE0oRNwQDAKAa8HDPtErNhfoAtBCYEcBTB6GoXhnyX/1gwrDb8zeEtbc50PLBnJT6gJIp2M2IiAeXHgGuMLiDbNzgThQ="
           on:
             tags: true
-            rvm: 2.1.9
+            rvm: 2.4.1
             condition: '($SKIP_FORGE_PUBLISH != true)'

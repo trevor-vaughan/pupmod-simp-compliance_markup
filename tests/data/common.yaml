@@ -1,7 +1,0 @@
----
-compliance_markup::compliance_map:
-        disa_stig:
-                compliance_markup::test::testvariable:
-                        value: "disa_stig"
-compliance_markup::enforcement:  [ 'disa_stig' ]
-test: "hiera"

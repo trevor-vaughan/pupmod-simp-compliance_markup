@@ -129,6 +129,7 @@ describe 'compliance_markup' do
             end
           end
         end
+
         [ {
             :profile_type => 'Array'
           },
@@ -147,46 +148,46 @@ describe 'compliance_markup' do
                     '#{profile_name}',
                     'other_profile'
                   ]
-    
+
                   class test1 (
                     $arg1_1 = 'foo1_1',
                     $arg1_2 = 'foo1_2'
                   ){
                     notify { 'bar': message => $arg1_1 }
                   }
-    
+
                   class test2 {
                     class test3 (
                       $arg3_1 = 'foo3_1'
                     ) { }
                   }
-    
+
                   define testdef1 (
                     $defarg1_1 = 'deffoo1_1'
                   ) {
                     notify { 'testdef1': message => $defarg1_1}
                   }
-    
+
                   define testdef2 (
                     $defarg1_2 = 'deffoo1_2',
                     $defarg2_2 = 'foo'
                   ) {
                     notify { 'testdef2': message => $defarg1_2}
                   }
-    
+
                   define one_off_inline {
                     compliance_map('other_profile', 'ONE_OFF', 'This is awesome')
-    
+
                     notify { $name: }
                   }
-    
+
                   include '::test1'
                   include '::test2::test3'
-    
+
                   testdef1 { 'test_definition': }
                   testdef2 { 'test_definition': defarg1_2 => 'test_bad' }
                   one_off_inline { 'one off': }
-    
+
                   compliance_map('other_profile', 'TOP_LEVEL', 'Top level call')
                 EOM
               }
@@ -194,50 +195,51 @@ describe 'compliance_markup' do
               let(:pre_condition) {
                 <<-EOM
                   $compliance_profile = '#{profile_name}'
-    
+
                   class test1 (
                     $arg1_1 = 'foo1_1',
                     $arg1_2 = 'foo1_2'
                   ){
                     notify { 'bar': message => $arg1_1 }
                   }
-    
+
                   class test2 {
                     class test3 (
                       $arg3_1 = 'foo3_1'
                     ) { }
                   }
-    
+
                   define testdef1 (
                     $defarg1_1 = 'deffoo1_1'
                   ) {
                     notify { 'testdef1': message => $defarg1_1}
                   }
-    
+
                   define testdef2 (
                     $defarg1_2 = 'deffoo1_2',
                     $defarg2_2 = 'foo'
                   ) {
                     notify { 'testdef2': message => $defarg1_2}
                   }
-    
+
                   define one_off_inline {
                     compliance_map('other_profile', 'ONE_OFF', 'This is awesome')
-    
+
                     notify { $name: }
                   }
-    
+
                   include '::test1'
                   include '::test2::test3'
-    
+
                   testdef1 { 'test_definition': }
                   testdef2 { 'test_definition': defarg1_2 => 'test_bad' }
                   one_off_inline { 'one off': }
-    
+
                   compliance_map('other_profile', 'TOP_LEVEL', 'Top level call')
                 EOM
               }
           end
+
           let(:facts) { facts }
 
           ['yaml','json'].each do |report_format|
@@ -415,7 +417,7 @@ describe 'compliance_markup' do
                     expect(entry['identifiers']).to_not be_empty
                     expect(entry['notes']).to_not be_empty
                   end
-                  end
+                end
               end
 
               context 'when running with the default options' do
@@ -516,6 +518,18 @@ describe 'compliance_markup' do
                 it { is_expected.to(compile.with_all_deps) }
               end
 
+              context 'with undefined values in the compliance hash' do
+                let(:pre_condition) {
+                  <<-EOM
+                    include 'compliance_markup'
+                  EOM
+                }
+
+                let(:hieradata) { 'undefined_values' }
+
+                it { is_expected.to(compile.with_all_deps) }
+              end
+
 =begin
               # Unknown why this does not work
               xcontext 'without valid compliance data in Hiera' do
@@ -529,9 +543,9 @@ describe 'compliance_markup' do
                 end
               end
 =end
+              end
             end
           end
-        end
         end
       end
     end
