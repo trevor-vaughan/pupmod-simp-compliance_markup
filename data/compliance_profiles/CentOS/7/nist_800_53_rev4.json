@@ -631,7 +631,7 @@
         "identifiers": [
           "IA-5(1)(a)"
         ],
-        "value": "-1"
+        "value": -1
       },
       "pam::cracklib_difok": {
         "identifiers": [
@@ -655,7 +655,7 @@
         "identifiers": [
           "IA-5(1)(a)"
         ],
-        "value": "-1"
+        "value": -1
       },
       "pam::cracklib_maxclassrepeat": {
         "identifiers": [
@@ -691,7 +691,7 @@
         "identifiers": [
           "IA-5(1)(a)"
         ],
-        "value": "-1"
+        "value": -1
       },
       "pam::cracklib_reject_username": {
         "identifiers": [
@@ -709,7 +709,7 @@
         "identifiers": [
           "IA-5(1)(a)"
         ],
-        "value": "-1"
+        "value": -1
       },
       "pam::deny": {
         "identifiers": [
@@ -1811,7 +1811,7 @@
         "identifiers": [
           "IA-5(1)(d)"
         ],
-        "value": "-1"
+        "value": -1
       },
       "simp_openldap::server::conf::default_ldif::ppolicy_pwd_in_history": {
         "identifiers": [
@@ -2556,9 +2556,7 @@
           "IA-5(c)",
           "IA-5(h)"
         ],
-        "value": [
-          "sha512"
-        ]
+        "value": "sha512"
       },
       "useradd::libuser_conf::defaults_hash_rounds_max": {
         "identifiers": [

@@ -1,3 +1,7 @@
+* Wed Nov 15 2017 Trevor Vaughan <tvaughan@onyxpoint.com> - 2.3.3-0
+- Aligned the EL7 disa_stig profile with the latest SSG content
+- Fixed several parameters with incorrect data types
+
 * Mon Oct 03 2017 Dylan Cochran <dylan.cochran@onyxpoint.com> - 2.3.2-0
 - Fix discrepancies between NIST and DISA compliance profiles
 

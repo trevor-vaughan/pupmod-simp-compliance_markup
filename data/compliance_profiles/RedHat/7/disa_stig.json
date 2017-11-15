@@ -24,8 +24,7 @@
           "CCI-001814",
           "CCI-000368"
         ],
-        "notes": "AIDE is quite stressful on a system and is set to 'false' by default. It should be enabled after a good understanding of system performance",
-        "value": false
+        "value": true
       },
       "aide::logrotate::rotate_period": {
         "identifiers": [
@@ -35,6 +34,41 @@
         ],
         "notes": "This value can be different than weekly but should be justified.",
         "value": "weekly"
+      },
+      "aide::schedule": {
+        "identifiers": [
+          "CCI-001744",
+          "SRG-OS-000363-GPOS-00150"
+        ],
+        "value": true
+      },
+      "aide::syslog": {
+        "identifiers": [
+          "CCI-001744",
+          "SRG-OS-000363-GPOS-00150"
+        ],
+        "value": true
+      },
+      "aide::minute": {
+        "identifiers": [
+          "CCI-001744",
+          "SRG-OS-000363-GPOS-00150"
+        ],
+        "value": 5
+      },
+      "aide::hour": {
+        "identifiers": [
+          "CCI-001744",
+          "SRG-OS-000363-GPOS-00150"
+        ],
+        "value": 4
+      },
+      "aide::weekday": {
+        "identifiers": [
+          "CCI-001744",
+          "SRG-OS-000363-GPOS-00150"
+        ],
+        "value": 0
       },
       "auditd::at_boot": {
         "identifiers": [
@@ -387,8 +421,7 @@
           "SRG-OS-000024-GPOS-00007",
           "CCI-000048"
         ],
-        "notes": "The actual content should be manually validated to determine if it matches the need of the implementation",
-        "value": "default"
+        "value": "us_dod"
       },
       "nsswitch::automount": {
         "identifiers": [
@@ -501,7 +534,7 @@
           "SRG-OS-000071-GPOS-00039",
           "CCI-000194"
         ],
-        "value": "-1"
+        "value": -1
       },
       "pam::cracklib_difok": {
         "identifiers": [
@@ -517,7 +550,7 @@
           "SRG-OS-000070-GPOS-00038",
           "CCI-000193"
         ],
-        "value": "-1"
+        "value": -1
       },
       "pam::cracklib_maxclassrepeat": {
         "identifiers": [
@@ -525,7 +558,7 @@
           "SRG-OS-000072-GPOS-00040",
           "CCI-000195"
         ],
-        "value": 4
+        "value": 2
       },
       "pam::cracklib_maxrepeat": {
         "identifiers": [
@@ -563,7 +596,7 @@
           "SRG-OS-000266-GPOS-00101",
           "CCI-001619"
         ],
-        "value": "-1"
+        "value": -1
       },
       "pam::cracklib_retry": {
         "identifiers": [
@@ -579,7 +612,7 @@
           "SRG-OS-000069-GPOS-00037",
           "CCI-000192"
         ],
-        "value": "-1"
+        "value": -1
       },
       "pam::deny": {
         "identifiers": [
@@ -1820,9 +1853,7 @@
           "SRG-OS-000073-GPOS-00041",
           "CCI-000196"
         ],
-        "value": [
-          "sha512"
-        ]
+        "value": "sha512"
       },
       "useradd::libuser_conf::defaults_hash_rounds_max": {
         "identifiers": [
@@ -2301,6 +2332,29 @@
           "AC-4"
         ],
         "value": true
+      },
+      "simp::classes": {
+        "identifiers": [
+          "CCI-002617",
+          "SRG-OS-0000437-GPOS-00194",
+          "CCI-001744",
+          "SRG-OS-000363-GPOS-00150"
+        ],
+        "value": [
+          "yum"
+        ],
+        "notes": "This will probably change in the future to a class inclusion method that is more clear"
+      },
+      "yum::config_options": {
+        "identifiers": [
+          "CCI-002617",
+          "SRG-OS-0000437-GPOS-00194"
+        ],
+        "value": {
+          "localpkg_gpgcheck": true,
+          "gpgcheck": true,
+          "clean_requirements_on_remove": true
+        }
       }
     }
   }
