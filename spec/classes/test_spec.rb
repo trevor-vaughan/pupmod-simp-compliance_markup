@@ -9,7 +9,7 @@ describe 'compliance_markup::test' do
         context 'when using the enforcement backend' do
 
           # This is limited to EL7 since that's all we have profiles for
-          if ['RedHat', 'CentOS'].include?(facts[:os][:name])
+          if ['RedHat', 'CentOS', 'OracleLinux'].include?(facts[:os][:name])
             if ['7'].include?(facts[:os][:release][:major])
 
               profiles = [ 'disa', 'nist']

@@ -11,7 +11,7 @@ describe 'compliance_markup class enforcement' do
       File.open(tmp_yaml, 'w') do |fh|
         fh.puts hiera_yaml
       end
-      host.do_scp_to(tmp_yaml, '/etc/puppetlabs/puppet/hiera.yaml', {})
+      copy_to(host, tmp_yaml, '/etc/puppetlabs/puppet/hiera.yaml', {})
     end
 
     Dir.mktmpdir do |dir|
@@ -21,7 +21,7 @@ describe 'compliance_markup class enforcement' do
 
         default_file = "/etc/puppetlabs/code/environments/production/hieradata/default.yaml"
 
-        host.do_scp_to(dir + "/default.yaml", default_file, {})
+        copy_to(host, dir + "/default.yaml", default_file, {})
       end
     end
   end
