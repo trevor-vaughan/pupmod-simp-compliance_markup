@@ -19,10 +19,14 @@ compliance_map :
       identifiers :
         - 'MISS1'
       value : missing1
-    testdef1:defarg1_1 :
+    testdef1::defarg1_1 :
       identifiers :
         - 'DEF1.1'
       value : deffoo1_1
+    testdef2::defarg1_2 :
+      identifiers :
+        - 'DEF1.2'
+      value : deffoo1_2
     unmapped1::arg1_1 :
       identifiers :
         - 'UNK001'

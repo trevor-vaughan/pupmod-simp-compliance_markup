@@ -5,10 +5,16 @@
 
 'compliance_map' :
   'test_profile' :
+    # This should not be compliant
     test1::arg1_1 :
       'identifiers' :
         - 'ID1.1'
       'value' : 'bar1_1'
+    # This should be compliant
+    test1::arg1_2 :
+      'identifiers' :
+        - 'ID1.2'
+      'value' : 'foo1_2'
     test2::test3::arg3_1 :
       'identifiers' :
         - 'ID1.2'

@@ -66,7 +66,7 @@ def enforcement(key, &block)
             compile_start_time = Time.now
             profile_compiler = compiler_class.new(self)
             profile_compiler.load(&block)
-            profile_map = profile_compiler.list_puppet_params(profile_list).cook do |item|
+            profile_map = profile_compiler.list_puppet_params(profile_list).cook do |k, item|
               item["value"]
             end
             cache("compliance_map_#{profile}", profile_map)
@@ -153,7 +153,7 @@ def compiler_class()
         def cook(&block)
           nhash = {}
           @hash.each do |key, value|
-            nvalue = yield value
+            nvalue = yield(key, value)
             nhash[key] = nvalue
           end
           nhash
