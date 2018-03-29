@@ -104,9 +104,9 @@ describe 'compliance_markup' do
                   }
 
                   let(:params){
-                    params = @default_params.dup
-                    params['options']['catalog_to_compliance_map'] = true
-                    params
+                    _params = @default_params.dup
+                    _params['options']['catalog_to_compliance_map'] = true
+                    _params
                   }
 
                   it 'should have a generated catlaog' do
@@ -316,16 +316,16 @@ describe 'compliance_markup' do
                 let(:hieradata) { 'passing_checks' }
 
                 let(:params) {
-                  params = @default_params.dup
+                  _params = @default_params.dup
 
-                  params['options'].merge!(
+                  _params['options'].merge!(
                     {
                       'client_report' => true,
                       'report_types'  => 'full'
                     }
                   )
 
-                  params
+                  _params
                 }
 
                 it { is_expected.to(create_class('compliance_markup')) }
@@ -352,15 +352,22 @@ describe 'compliance_markup' do
                 let(:hieradata) { 'passing_checks' }
 
                 let(:params) {
-                  params = @default_params.dup
+                  _params = @default_params.dup
 
-                  params['options'].merge!(
+                  _params['options'].merge!(
                     {
                       'report_types' => 'full'
                     }
                   )
 
-                  params
+                  _params
+                }
+
+                let(:all_resources) {
+                  compliant = report['compliance_profiles'][profile_name]['compliant'] || {}
+                  non_compliant = report['compliance_profiles'][profile_name]['non_compliant'] || {}
+
+                  compliant.merge(non_compliant)
                 }
 
                 it 'should have a valid version number' do
@@ -383,9 +390,52 @@ describe 'compliance_markup' do
                   expect( report['compliance_profiles'][profile_name]['documented_missing_resources'] ).to_not be_empty
                 end
 
+                it 'should not show arguments in the documented_missing_resources section' do
+                  expect( report['compliance_profiles'][profile_name]['documented_missing_resources'].grep(/::arg/) ).to be_empty
+                end
+
+                it 'should not have documented_missing_resources that exist in the compliance reports' do
+
+                  known_resources = all_resources.keys.map do |resource|
+                    if resource  =~ /\[(.*)\]/
+                      all_resources[resource]['parameters'].keys.map do |param|
+                        $1.split('::').first
+                      end
+                    else
+                      nil
+                    end
+                  end.flatten.uniq.compact.map(&:downcase)
+
+                  expect(
+                    Array(report['compliance_profiles'][profile_name]['documented_missing_resources']) &
+                    known_resources
+                  ).to be_empty
+                end
+
                 it 'should have a documented_missing_parameters section' do
                   expect( report['compliance_profiles'][profile_name]['documented_missing_parameters'] ).to_not be_empty
                 end
+
+                it 'should not have documented_missing_parameters that exist in the compliance reports' do
+                  all_resources = report['compliance_profiles'][profile_name]['compliant'].merge(
+                    report['compliance_profiles'][profile_name]['compliant'])
+
+                  known_parameters = all_resources.keys.map do |resource|
+                    if resource  =~ /\[(.*)\]/
+                      all_resources[resource]['parameters'].keys.map do |param|
+                        $1 + '::' + param
+                      end
+                    else
+                      nil
+                    end
+                  end.flatten.compact.map(&:downcase)
+
+                  expect(
+                    Array(report['compliance_profiles'][profile_name]['documented_missing_parameters']) &
+                    known_parameters
+                  ).to be_empty
+                end
+
                 if (data[:profile_type] == 'Array')
                   it 'should note the "other" profile' do
                     expect( report['compliance_profiles']['other_profile'] ).to_not be_empty
@@ -457,6 +507,19 @@ describe 'compliance_markup' do
                   report['compliance_profiles'][profile_name]['non_compliant'][human_name]['parameters']['arg1_1']
                 }
 
+                let(:params) {
+                  _params = @default_params.dup
+
+                  _params['options'].merge!(
+                    {
+                      'client_report' => true,
+                      'report_types'  => 'full'
+                    }
+                  )
+
+                  _params
+                }
+
                 it 'should have 1 non_compliant parameter' do
                   expect( report['compliance_profiles'][profile_name]['non_compliant'][human_name]['parameters'].size ).to eq(1)
                 end
@@ -467,6 +530,20 @@ describe 'compliance_markup' do
 
                 it 'should have an invalid entry with system value "foo1_1"' do
                   expect( invalid_entry['system_value'] ).to eq('foo1_1')
+                end
+
+                it 'should not have identical compliant and non_compliant entries' do
+                  compliant_entries = report['compliance_profiles'][profile_name]['compliant']
+                  non_compliant_entries = report['compliance_profiles'][profile_name]['non_compliant']
+
+                  compliant_entries.keys.each do |resource|
+                    if non_compliant_entries[resource]
+                      expect(
+                        compliant_entries[resource]['parameters'].keys &
+                        non_compliant_entries[resource]['parameters'].keys
+                      ).to be_empty
+                    end
+                  end
                 end
               end
 

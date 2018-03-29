@@ -1,44 +1,38 @@
-# vim: set expandtab ts=2 sw=2:
-
-
 #
 # BEGIN COMPLIANCE_PROFILE
 #
+def catalog_to_map(catalog)
+  catalog_map = Hash.new()
 
+  catalog_map['compliance_map::percent_sign'] = '%'
+  catalog_map['compliance_map'] = {
+    'version'                => @api_version,
+    'generated_via_function' => Hash.new()
+  }
 
-  def catalog_to_map(catalog)
-    catalog_map = Hash.new()
+  catalog.resources.each do |resource|
+    # Ignore our own nonsense
+    next if resource.name == 'Compliance_markup'
 
-    catalog_map['compliance_map::percent_sign'] = '%'
-    catalog_map['compliance_map'] = {
-      'version'                => @api_version,
-      'generated_via_function' => Hash.new()
-    }
+    if resource.name.is_a?(String) && (resource.name[0] =~ /[A-Z]/) && resource.parameters
+      resource.parameters.each do |param_array|
+        param = param_array.last
 
-    catalog.resources.each do |resource|
-      # Ignore our own nonsense
-      next if resource.name == 'Compliance_markup'
+        param_name = %{#{resource.name}::#{param.name}}.downcase
 
-      if resource.name.is_a?(String) && (resource.name[0] =~ /[A-Z]/) && resource.parameters
-        resource.parameters.each do |param_array|
-          param = param_array.last
+        # We only want things with values
+        next if param.value.nil?
 
-          param_name = %{#{resource.name}::#{param.name}}.downcase
-
-          # We only want things with values
-          next if param.value.nil?
-
-          catalog_map['compliance_map']['generated_via_function'][param_name] = {
-            'identifiers' => ['GENERATED'],
-            'value'       => param.value
-          }
-        end
+        catalog_map['compliance_map']['generated_via_function'][param_name] = {
+          'identifiers' => ['GENERATED'],
+          'value'       => param.value
+        }
       end
     end
-
-    return catalog_map.to_yaml
   end
 
+  return catalog_map.to_yaml
+end
 
 # There is no way to silence the global warnings on looking up a qualified
 # variable, so we're going to hack around it here.
@@ -237,6 +231,8 @@ def write_server_report(config, report)
 end
 
 def compliance_map(args, context)
+  require 'set'
+
   @context = context
   if (@custom_entries == nil)
     @custom_entries = {}
@@ -260,100 +256,113 @@ def compliance_map(args, context)
       report_types << 'custom_entries'
     end
     report = main_config[:extra_data].dup
-    report["version"] = '1.0.1';
-    report["compliance_profiles"] = {}
+
+    report['version'] = '1.0.1';
+    report['timestamp'] = Time.now.to_s
+    report['compliance_profiles'] = {}
+
     profile_list = get_compliance_profiles
-    unless profile_list.class.to_s == "Array"
-      profile_list = [ profile_list ]
-    end
-      profile_list.each do |profile|
-        profile_report = {}
-        report["compliance_profiles"][profile] = profile_report
-        profile_report["documented_missing_parameters"] = []
-        profile_report["compliant"] = {}
-        profile_report["non_compliant"] = {}
-        profile_map = profile_compiler.list_puppet_params([profile]).cook do |data|
-          {"value" => data["value"], "identifiers" => data["identifiers"]}
-        end
-        parameters = {}
-        classes = {}
-        @catalog.resources.each do |obj|
-          classname = obj.title.downcase
-          obj.parameters.each do |parameter, data|
-            fully_qualified_parameter = classname + "::" + parameter.to_s
-            if (profile_map.key?(fully_qualified_parameter))
-              profile_settings = profile_map[fully_qualified_parameter]
-              current_value = data.value
-              # XXX ToDo This should be improved to allow for validators to be specified
-              # instead of forcing regexes to be in values (as it breaks enforcement)
-              # ie, functions or built ins.
-              if (profile_settings.key?("value"))
-                expected_value = profile_settings["value"]
-                result = {
-                    "compliant_value" => expected_value,
-                    "system_value" => current_value,
-                }
-                if (profile_settings.key?("identifiers"))
-                 result["identifiers"] = profile_settings["identifiers"]
-                end
-                classkey = "#{obj.type}[#{obj.title}]"
-                if (expected_value =~ /^re:(.+)/)
-                  if (current_value =~ Regexp.new($1))
-                    section = "compliant"
-                  else
-                    section = "non_compliant"
-                  end
+    Array(profile_list).each do |profile|
+
+      profile_report = {}
+
+      report["compliance_profiles"][profile] = profile_report
+
+      profile_report['compliant'] = {}
+      profile_report['non_compliant'] = {}
+
+      profile_map = profile_compiler.list_puppet_params([profile]).cook do |data|
+        {"value" => data["value"], "identifiers" => data["identifiers"]}
+      end
+
+      known_parameters = Set.new
+      known_resources = Set.new
+
+      @catalog.resources.each do |obj|
+
+        resourcename = obj.title.downcase
+
+        obj.parameters.each do |parameter, data|
+
+          fully_qualified_parameter = resourcename + "::" + parameter.to_s
+
+          if (profile_map.key?(fully_qualified_parameter))
+
+            profile_settings = profile_map[fully_qualified_parameter]
+            current_value = data.value
+
+            # XXX ToDo This should be improved to allow for validators to be specified
+            # instead of forcing regexes to be in values (as it breaks enforcement)
+            # ie, functions or built ins.
+            if (profile_settings.key?("value"))
+              expected_value = profile_settings["value"]
+              result = {
+                  "compliant_value" => expected_value,
+                  "system_value" => current_value,
+              }
+              if (profile_settings.key?("identifiers"))
+               result["identifiers"] = profile_settings["identifiers"]
+              end
+              classkey = "#{obj.type}[#{obj.title}]"
+              if (expected_value =~ /^re:(.+)/)
+                if (current_value =~ Regexp.new($1))
+                  section = "compliant"
                 else
-                  if (current_value == expected_value)
-                    section = "compliant"
-                  else
-                    section = "non_compliant"
-                  end
+                  section = "non_compliant"
                 end
-                if report_types.include?(section)
-                  unless (profile_report[section].key?(classkey))
-                    profile_report[section][classkey] = {}
-                    profile_report[section][classkey]["parameters"] = {}
-                  end
-                    profile_report[section][classkey]["parameters"][parameter.to_s] = result
-
+              else
+                if (current_value == expected_value)
+                  section = "compliant"
+                else
+                  section = "non_compliant"
                 end
               end
-            else
-               parameters[fully_qualified_parameter] = true
-               classes[classname] = true
-            end
-          end
-        end
+              if report_types.include?(section)
+                unless (profile_report[section].key?(classkey))
+                  profile_report[section][classkey] = {}
+                  profile_report[section][classkey]["parameters"] = {}
+                end
+                  profile_report[section][classkey]["parameters"][parameter.to_s] = result
 
-        {
-            'unknown_parameters' => 'documented_missing_parameters',
-            'unknown_resources' => 'documented_missing_resources'
-        }.each do |type, name|
-          if report_types.include?(type)
-            profile_report[name] = []
-            profile_map.select do |key, value|
-              unless parameters.key?(key)
-                profile_report[name] << key
               end
             end
+
+            known_parameters << fully_qualified_parameter
+            known_resources << resourcename
           end
         end
+      end
 
-        profile_report["custom_entries"] = @custom_entries[profile]
-
-        profile_report['summary'] = summary(profile_report)
-
-        # Clean up empty arrays and hashes
-        [ 'non_compliant', 'compliant', 'documented_missing_parameters', "documented_missing_resources"].each do |key|
-          if profile_report[key] == {}
-            profile_report.delete(key);
-          end
-          if profile_report[key] == []
-            profile_report.delete(key);
-          end
+      if report_types.include?('unknown_parameters')
+        profile_report['documented_missing_parameters'] = profile_map.keys.select do |profile_qualified_parameter|
+          !known_parameters.include?(profile_qualified_parameter)
         end
+      end
+
+      if report_types.include?('unknown_resources')
+        profile_report['documented_missing_resources'] = profile_map.keys.map do |profile_qualified_parameter|
+          # Only want the resource
+          resource_name = profile_qualified_parameter.split('::')[0..-2]
+          known_resources.include?(resource_name) ? nil : resource_name
+        end.compact
+      end
+
+      profile_report["custom_entries"] = @custom_entries[profile]
+
+      profile_report['summary'] = summary(profile_report)
+
+      # Clean up empty arrays and hashes
+      [ 'non_compliant', 'compliant', 'documented_missing_parameters', "documented_missing_resources"].each do |key|
+        if profile_report[key].is_a?(Hash) || profile_report[key].is_a?(Array)
+          profile_report.delete(key) if profile_report[key].empty?
+        else
+          # Completely invalid data, should never get here but don't want to fail
+          Puppet.debug("compliance_map.rb: Invalid key '#{key}' found in the 'profile_report'")
+          profile_report.delete(key)
+        end
+      end
     end
+
     write_server_report(main_config, report)
     add_file_to_client(main_config, report)
   end
@@ -452,3 +461,5 @@ def cache_has_key(key)
   end
   @hash.key?(key)
 end
+
+# vim: set expandtab ts=2 sw=2:

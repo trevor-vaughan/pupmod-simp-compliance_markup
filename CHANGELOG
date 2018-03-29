@@ -1,3 +1,8 @@
+* Fri Mar 30 2018 Trevor Vaughan <tvaughan@onyxpoint.com> - 2.3.4-0
+- Fixed issues with the compliance_map logic that were causing false results to
+  be added to the 'documented_missing_parameters' and
+  'documented_missing_resources' lists
+
 * Tue Mar 06 2018 Liz Nemsick <lnemsick.simp@gmail.com> - 2.3.3-0
 - Updated TMOUT setting in /etc/profile.d/simp.sh to match EL7 STIG
   setting (Reference: RHEL-07-040160)
