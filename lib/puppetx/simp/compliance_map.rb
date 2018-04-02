@@ -269,12 +269,10 @@ def compliance_map(args, context)
     if main_config[:custom_call]
       add_custom_entries(main_config)
     else
-      profile_map = profile_compiler.list_puppet_params([profile]).cook do |fully_qualified_parameter, data|
-        result = {
-          'value' => data['value'],
-          'identifiers' => data['identifiers']
-        }
+      unknown_parameters = Set.new
+      unknown_resources = Set.new
 
+      profile_compiler.list_puppet_params([profile]).to_h.each_pair do |fully_qualified_parameter, profile_settings|
         resource_parts = fully_qualified_parameter.split('::')
         param = resource_parts.pop
 
@@ -290,23 +288,7 @@ def compliance_map(args, context)
               res = @catalog.resource("#{define_resource_name}[#{define_name}]")
             end
           end
-
-          result['base_resource']    = base_resource
-          result['catalog_resource'] = res
         end
-
-        result['parameter'] = param
-
-        result
-      end
-
-      unknown_parameters = Set.new
-      unknown_resources = Set.new
-
-      profile_map.keys.each do |fully_qualified_parameter|
-        profile_settings = profile_map[fully_qualified_parameter]
-        res = profile_settings['catalog_resource']
-        param = profile_settings['parameter']
 
         if res.nil?
           unknown_resources << profile_settings['base_resource']
