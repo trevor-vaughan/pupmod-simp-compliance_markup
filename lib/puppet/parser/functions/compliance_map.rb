@@ -173,38 +173,16 @@ module Puppet::Parser::Functions
         }
     ENDHEREDOC
 
-        #
-        # Dynamic per-environment code loader.
-        #
-        # XXX ToDo
-        # This is persisted into the catalog ONLY to support compliance report
-        # custom entries.
-        #
-        # See the compliance_map.rb source code, but these may not be necessary.
-        # If that functionality is removed, return this logic to being instantiated each time.
+    catalog = find_global_scope.catalog
 
-        catalog = find_global_scope.catalog
-        begin
-            compliance_report_generator = catalog._compliance_report_generator
-        rescue
-            catalog.instance_eval do
-                def _compliance_report_generator()
-                    @_compliance_report_generator
-                end
-                def _compliance_report_generator=(value)
-                    @_compliance_report_generator = value
-                end
-            end
-            object = Object.new()
-            myself = __FILE__
-            filename = File.dirname(File.dirname(File.dirname(File.dirname(myself)))) + "/puppetx/simp/compliance_map.rb"
-            object.instance_eval(File.read(filename), filename)
-            filename = File.dirname(File.dirname(File.dirname(File.dirname(myself)))) + "/puppetx/simp/compliance_mapper.rb"
-            object.instance_eval(File.read(filename), filename)
-            catalog._compliance_report_generator = object;
-            compliance_report_generator = object;
-        end
-    compliance_report_generator.compliance_map(args, self)
+    if args.first.is_a?(Hash)
+      catalog.environment_instance.instance_variable_set('@compliance_markup_shim_shim_context', self)
+      function_ensure_resource(['compliance_markup_shim', 'shim', { 'options' => args }])
+    else
+      unique_name = args.join('_').gsub(/[^0-9a-z_]/i,'')
+      catalog.environment_instance.instance_variable_set("@compliance_markup_shim_#{unique_name}_context", self)
+      function_ensure_resource(['compliance_markup_shim', unique_name, { 'options' => args }])
+    end
   end
 end
 

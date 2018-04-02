@@ -58,15 +58,16 @@ def process_options(args)
 
   # What profile are we using?
   if args && !args.empty?
-    unless (args.first.is_a?(String) || args.first.is_a?(Hash))
-      raise Puppet::ParseError, "compliance_map(): First parameter must be a String or Hash"
+    unless (args.is_a?(Array) || args.is_a?(Hash))
+      raise Puppet::ParseError, "compliance_map(): First parameter must be a Array or Hash"
     end
 
     # This is used during the main call
-    if args.first.is_a?(Hash)
+    if args.is_a?(Hash)
       # Convert whatever was passed in to a symbol so that the Hash merge
       # works properly.
-      user_config = Hash[args.first.map{|k,v| [k.to_sym, v] }]
+      user_config = Hash[args.map{|k,v| [k.to_sym, v] }]
+
       if user_config[:report_types]
         user_config[:report_types] = Array(user_config[:report_types])
       end
@@ -167,6 +168,31 @@ def add_file_to_client(config, compliance_map)
       compliance_report_target = %(#{client_vardir}/compliance_report.#{config[:format]})
     end
 
+    if config[:format] == 'json'
+      content = %(#{(compliance_map.to_json)}\n)
+    elsif config[:format] == 'yaml'
+      content = %(#{compliance_map.to_yaml}\n)
+    end
+
+    compliance_resource = @context.catalog.resources.find{ |res|
+      res.type == 'File' && res.name == compliance_report_target
+    }
+
+    if compliance_resource
+      compliance_resource[:content] = content
+    else
+    @context.function_ensure_resource([
+      'file',
+      compliance_report_target,
+      {
+        'owner' => Process.uid,
+        'group' => Process.gid,
+        'mode'  => '0640',
+        'content' => content
+      }
+    ])
+    end
+=begin
     # Retrieve the catalog resource if it already exists, create one if it
     # does not
     compliance_resource = @context.catalog.resources.find{ |res|
@@ -206,6 +232,7 @@ def add_file_to_client(config, compliance_map)
 
     # Inject new information into the catalog
     @context.catalog.add_resource(compliance_resource)
+=end
   end
 end
 
@@ -234,9 +261,7 @@ def compliance_map(args, context)
   require 'set'
 
   @context = context
-  if (@custom_entries == nil)
-    @custom_entries = {}
-  end
+  @custom_entries ||= {}
   @catalog = @context.resource.scope.catalog
   profile_compiler = compiler_class.new(self)
   profile_compiler.load do |key, default|
@@ -245,7 +270,7 @@ def compliance_map(args, context)
 
   main_config = process_options(args)
   if main_config[:custom_call]
-    add_custom_entries(main_config);
+    add_custom_entries(main_config)
   else
     report_types = main_config[:report_types]
     if report_types.include?('full')
@@ -281,10 +306,12 @@ def compliance_map(args, context)
       @catalog.resources.each do |obj|
 
         resourcename = obj.title.downcase
+        known_resources << resourcename
 
         obj.parameters.each do |parameter, data|
 
           fully_qualified_parameter = resourcename + "::" + parameter.to_s
+          known_parameters << fully_qualified_parameter
 
           if (profile_map.key?(fully_qualified_parameter))
 
@@ -326,28 +353,39 @@ def compliance_map(args, context)
 
               end
             end
-
-            known_parameters << fully_qualified_parameter
-            known_resources << resourcename
           end
         end
       end
 
       if report_types.include?('unknown_parameters')
-        profile_report['documented_missing_parameters'] = profile_map.keys.select do |profile_qualified_parameter|
-          !known_parameters.include?(profile_qualified_parameter)
+        documented_missing_parameters = []
+
+        profile_map.keys.each do |profile_qualified_parameter|
+          unless known_parameters.include?(profile_qualified_parameter)
+            documented_missing_parameters << profile_qualified_parameter
+          end
         end
+
+        profile_report['documented_missing_parameters'] = documented_missing_parameters.sort
       end
 
       if report_types.include?('unknown_resources')
-        profile_report['documented_missing_resources'] = profile_map.keys.map do |profile_qualified_parameter|
+        documented_missing_resources = []
+
+        profile_map.keys.each do |profile_qualified_parameter|
           # Only want the resource
-          resource_name = profile_qualified_parameter.split('::')[0..-2]
-          known_resources.include?(resource_name) ? nil : resource_name
-        end.compact
+          resource_name = profile_qualified_parameter.split('::')[0..-2].join('::')
+          unless known_resources.include?(resource_name)
+            documented_missing_resources << resource_name
+          end
+        end
+
+        profile_report['documented_missing_resources'] = documented_missing_resources.uniq.sort
       end
 
-      profile_report["custom_entries"] = @custom_entries[profile]
+      require 'pry'
+      binding.pry
+      profile_report["custom_entries"] = @custom_entries[profile] if @custom_entries[profile]
 
       profile_report['summary'] = summary(profile_report)
 
@@ -400,13 +438,17 @@ def add_custom_entries(main_config)
     value['notes'] = main_config[:custom][:notes]
   end
   profile = main_config[:custom][:profile]
+
   resource_name = %(#{@context.resource.type}::#{@context.resource.title})
+
   unless (@custom_entries.key?(profile))
     @custom_entries[profile] = {}
   end
+
   unless (@custom_entries[profile].key?(resource_name))
     @custom_entries[profile][resource_name] = []
   end
+
   @custom_entries[profile][resource_name] << value
 end
 

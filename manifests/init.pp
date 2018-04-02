@@ -80,7 +80,7 @@ class compliance_markup (
 
   if $options {
     if $compliance_map and !$options['default_map'] {
-      $_full_options = $options + { 'default_map' => $compliance_map }
+      $_full_options = merge($options, { 'default_map' => $compliance_map })
     }
     else {
       $_full_options = $options
@@ -99,5 +99,5 @@ class compliance_markup (
     }
   }
 
-  compliance_markup::map { 'execute': options => $_options }
+  compliance_map($_options)
 }

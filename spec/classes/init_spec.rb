@@ -254,7 +254,7 @@ describe 'compliance_markup' do
                   }
                 }
 
-                is_expected.to compile.with_all_deps
+                is_expected.to(compile.with_all_deps)
               end
 
               after(:each) do
@@ -330,11 +330,11 @@ describe 'compliance_markup' do
 
                 it { is_expected.to(create_class('compliance_markup')) }
 
-                it 'should have a compliance File Resource' do
+                xit 'should have a compliance File Resource' do
                   expect(compliance_file_resource).to_not be_nil
                 end
 
-                it "should have a valid #{report_format} report" do
+                xit "should have a valid #{report_format} report" do
                   file = nil;
                   if report_format == 'yaml'
                     file = YAML.load(compliance_file_resource[:content]);
@@ -462,7 +462,6 @@ describe 'compliance_markup' do
                   end
 
                   it 'should have custom_entries for the "other" profile that have identifiers and notes' do
-
                     entry = report['compliance_profiles']['other_profile']['custom_entries']['One_off_inline::one off'].first
                     expect(entry['identifiers']).to_not be_empty
                     expect(entry['notes']).to_not be_empty
