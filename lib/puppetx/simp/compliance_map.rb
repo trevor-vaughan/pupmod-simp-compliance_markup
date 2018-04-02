@@ -272,7 +272,7 @@ def compliance_map(args, context)
       unknown_parameters = Set.new
       unknown_resources = Set.new
 
-      profile_compiler.list_puppet_params([profile]).to_h.each_pair do |fully_qualified_parameter, profile_settings|
+      profile_compiler.list_puppet_params([profile]).each do |fully_qualified_parameter, profile_settings|
         resource_parts = fully_qualified_parameter.split('::')
         param = resource_parts.pop
 

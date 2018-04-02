@@ -158,9 +158,6 @@ def compiler_class()
           end
           nhash
         end
-        def to_h
-          @hash
-        end
       end
     end
     def list_puppet_params(profile_list)
