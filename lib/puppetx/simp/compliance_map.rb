@@ -291,7 +291,7 @@ def compliance_map(args, context)
         end
 
         if res.nil?
-          unknown_resources << profile_settings['base_resource']
+          unknown_resources << base_resource
         elsif res.has_key?(param.to_sym)
           current_value = res[param]
 
