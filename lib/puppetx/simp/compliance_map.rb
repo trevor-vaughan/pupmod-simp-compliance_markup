@@ -290,7 +290,7 @@ def compliance_map(args, context)
           end
         end
 
-        if res.nil?
+        if res.nil? && base_resource
           unknown_resources << base_resource
         elsif res.has_key?(param.to_sym)
           current_value = res[param]
@@ -337,7 +337,7 @@ def compliance_map(args, context)
       end
     end
 
-    profile_report['custom_entries'] = @custom_entries[profile]
+    profile_report['custom_entries'] = @custom_entries[profile] if @custom_entries[profile]
     profile_report['summary'] = summary(profile_report)
 
     report['compliance_profiles'][profile] = profile_report
