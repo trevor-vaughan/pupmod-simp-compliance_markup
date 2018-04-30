@@ -630,7 +630,7 @@
       },
       "pam::cracklib_maxclassrepeat": {
         "identifiers": [
-          "RHEL-07-010160",
+          "RHEL-07-010190",
           "SRG-OS-000072-GPOS-00040",
           "CCI-000195"
         ],
@@ -638,7 +638,7 @@
       },
       "pam::cracklib_maxrepeat": {
         "identifiers": [
-          "RHEL-07-010150",
+          "RHEL-07-010180",
           "SRG-OS-000072-GPOS-00040",
           "CCI-000195"
         ],
