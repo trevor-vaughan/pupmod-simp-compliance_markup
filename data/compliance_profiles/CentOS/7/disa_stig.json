@@ -732,6 +732,23 @@
         ],
         "value": 24
       },
+      "pam::even_deny_root": {
+        "identifiers": [
+          "RHEL-07-010330",
+          "SRG-OS-000329-GPOS-00128",
+          "SRG-OS-000021-GPOS-00005",
+          "CCI-002238"
+        ],
+        "value": true
+      },
+      "pam::hash_algorithm": {
+        "identifiers": [
+          "RHEL-07-010200",
+          "SRG-OS-000073-GPOS-00041",
+          "CCI-000196"
+        ],
+        "value": "sha512"
+      },
       "pam::uid": {
         "identifiers": [
           "RHEL-07-010000",
@@ -742,7 +759,7 @@
       },
       "pam::unlock_time": {
         "identifiers": [
-          "RHEL-07-010370",
+          "RHEL-07-010320",
           "SRG-OS-000329-GPOS-00128",
           "CCI-002238"
         ],
@@ -1963,7 +1980,7 @@
         "oval-ids": [
           "xccdf_org:ssgproject:content_rule_account_disable_post_pw_expiration"
         ],
-        "value": 35
+        "value": 0
       },
       "useradd::etc_profile::session_timeout": {
         "identifiers": [
