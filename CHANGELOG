@@ -1,3 +1,7 @@
+* Fri Apr 27 2018 Liz Nemsick <lnemsick.simp@gmail.com> - 2.3.4-0
+- Fixed the inappropriate value of useradd::useradd::inactive in
+  the DISA STIG profiles.  It is now set to 0.
+
 * Fri Mar 30 2018 Trevor Vaughan <tvaughan@onyxpoint.com> - 2.3.4-0
 - Update PAM settings in the `disa_stig` profile
 - Fixed issues with the compliance_map logic that were causing false results to
