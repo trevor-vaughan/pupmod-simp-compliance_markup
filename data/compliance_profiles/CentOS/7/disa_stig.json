@@ -2536,6 +2536,12 @@
         ],
         "notes": "This will probably change in the future to a class inclusion method that is more clear"
       },
+      "svckill::mode": {
+        "identifiers": [
+          "CCI-000381"
+        ],
+        "value": "enforcing"
+      },
       "yum::config_options": {
         "identifiers": [
           "CCI-002617",

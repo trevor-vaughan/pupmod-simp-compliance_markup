@@ -2472,6 +2472,12 @@
         ],
         "value": true
       },
+      "svckill::mode": {
+        "identifiers": [
+          "CM-7"
+        ],
+        "value": "enforcing"
+      },
       "tpm::ima::enable": {
         "identifiers": [
           "AC-25",
