@@ -732,6 +732,22 @@
         ],
         "value": 24
       },
+      "pam::even_deny_root": {
+        "identifiers": [
+          "RHEL-07-010330",
+          "SRG-OS-000329-GPOS-00128",
+          "SRG-OS-000021-GPOS-00005",
+          "CCI-002238"
+        ],
+        "value": true
+      },
+      "pam::hash_algorithm": {
+        "identifiers": [
+          "RHEL-07-010200",
+          "CCI-000196"
+        ],
+        "value": "sha512"
+      },
       "pam::uid": {
         "identifiers": [
           "RHEL-07-010000",
