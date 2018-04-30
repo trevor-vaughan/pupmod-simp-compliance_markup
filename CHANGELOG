@@ -1,4 +1,5 @@
 * Fri Mar 30 2018 Trevor Vaughan <tvaughan@onyxpoint.com> - 2.3.4-0
+- Update PAM settings in the `disa_stig` profile
 - Fixed issues with the compliance_map logic that were causing false results to
   be added to the 'documented_missing_parameters' and
   'documented_missing_resources' lists

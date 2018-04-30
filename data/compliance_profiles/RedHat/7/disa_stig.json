@@ -634,7 +634,7 @@
           "SRG-OS-000072-GPOS-00040",
           "CCI-000195"
         ],
-        "value": 2
+        "value": 4
       },
       "pam::cracklib_maxrepeat": {
         "identifiers": [
@@ -642,7 +642,7 @@
           "SRG-OS-000072-GPOS-00040",
           "CCI-000195"
         ],
-        "value": 2
+        "value": 3
       },
       "pam::cracklib_maxsequence": {
         "identifiers": [
@@ -749,7 +749,7 @@
         "oval-ids": [
           "xccdf_org:ssgproject:content_rule_accounts_passwords_pam_faillock_unlock_time"
         ],
-        "value": "never"
+        "value": 604800
       },
       "pam::use_netgroups": {
         "identifiers": [
