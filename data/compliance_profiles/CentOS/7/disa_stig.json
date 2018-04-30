@@ -744,6 +744,7 @@
       "pam::hash_algorithm": {
         "identifiers": [
           "RHEL-07-010200",
+          "SRG-OS-000073-GPOS-00041",
           "CCI-000196"
         ],
         "value": "sha512"
@@ -758,7 +759,7 @@
       },
       "pam::unlock_time": {
         "identifiers": [
-          "RHEL-07-010370",
+          "RHEL-07-010320",
           "SRG-OS-000329-GPOS-00128",
           "CCI-002238"
         ],
