@@ -582,6 +582,149 @@
         ],
         "value": true
       },
+      "gdm::settings": {
+        "identifiers": [
+          "CCI-000366",
+          "RHEL-07-010440",
+          "RHEL-07-010450",
+          "SRG-OS-000480-GPOS-00229"
+        ],
+        "oval_ids": [
+          "xccdf_org.ssgproject.content_rule_dconf_gnome_disable_user_list",
+          "xccdf_org.ssgproject.content_rule_dconf_gnome_screensaver_user_info"
+        ],
+        "value": {
+          "chooser": {
+            "Multicast": false
+          },
+          "daemon": {
+            "TimedLoginEnable": false,
+            "AutomaticLoginEnable": false
+          },
+          "greeter": {
+            "IncludeAll": false
+          },
+          "security": {
+            "DisallowTCP": true
+          },
+          "xdmcp": {
+            "Enable": false
+          }
+        }
+      },
+      "gdm::banner": {
+        "identifiers": [
+          "CCI-000048",
+          "RHEL-07-010030",
+          "SRG-OS-000023-GPOS-00006",
+          "SRG-OS-000023-GPOS-00007",
+          "SRG-OS-000023-GPOS-00008"
+        ],
+        "oval_ids": [
+          "xccdf_org.ssgproject.content_rule_dconf_gnome_banner_enabled"
+        ],
+        "value": true
+      },
+      "gdm::simp_banner": {
+        "identifiers": [
+          "CCI-000048",
+          "RHEL-07-010030",
+          "SRG-OS-000023-GPOS-00006",
+          "SRG-OS-000023-GPOS-00007",
+          "SRG-OS-000023-GPOS-00008"
+        ],
+        "oval_ids": [
+          "xccdf_org.ssgproject.content_rule_dconf_gnome_banner_enabled",
+          "xccdf_org.ssgproject.content_rule_dconf_gnome_login_banner_text"
+        ],
+        "value": "us/department_of_defense"
+      },
+      "gdm::dconf_hash": {
+        "identifiers": [
+        ],
+        "oval_ids": [
+
+        ],
+        "value": {
+          "org/gnome/login-screen": {
+            "disable-restart-buttons": {
+              "value": true
+            },
+            "disable-user-list": {
+              "value": true
+            }
+          }
+        }
+      },
+      "gnome::dconf_hash": {
+        "identifiers": [
+          "CCI-000056",
+          "CCI-000057",
+          "CCI-000366",
+          "RHEL-07-010060",
+          "RHEL-07-010062",
+          "RHEL-07-010070",
+          "RHEL-07-010081",
+          "RHEL-07-010082",
+          "RHEL-07-010100",
+          "RHEL-07-010101",
+          "RHEL-07-010110",
+          "RHEL-07-020230",
+          "SRG-OS-000028-GPOS-00009",
+          "SRG-OS-000029-GPOS-00010",
+          "SRG-OS-000030-GPOS-00010",
+          "SRG-OS-000480-GPOS-00227"
+        ],
+        "oval_ids": [
+          "xccdf_org.ssgproject.content_rule_dconf_gnome_disable_automount",
+          "xccdf_org.ssgproject.content_rule_dconf_gnome_screensaver_idle_activation_enabled",
+          "xccdf_org.ssgproject.content_rule_dconf_gnome_screensaver_idle_delay",
+          "xccdf_org.ssgproject.content_rule_dconf_gnome_screensaver_lock_delay",
+          "xccdf_org.ssgproject.content_rule_dconf_gnome_screensaver_lock_enabled",
+          "xccdf_org.ssgproject.content_rule_dconf_gnome_session_user_locks"
+        ],
+        "value": {
+          "simp_gnome": {
+            "org/gnome/desktop/media-handling": {
+              "automount": {
+                "value": false
+              },
+              "automount-open": {
+                "value": false
+              },
+              "autorun-never": {
+                "value": true
+              }
+            },
+            "org/gnome/settings-daemon/plugins/media-keys": {
+              "logout": {
+                "value": "''"
+              }
+            },
+            "org/gnome/settings-daemon/plugins/power": {
+              "active": {
+                "value": false
+              }
+            },
+            "org/gnome/desktop/session": {
+              "idle-delay": {
+                "value": "uint32 900"
+              }
+            },
+            "org/gnome/desktop/screensaver": {
+              "idle-activation-enabled": {
+                "value": true
+              },
+              "lock-enabled": {
+                "value": true
+              },
+              "lock-delay": {
+                "value": 5
+              }
+            }
+          }
+        }
+      },
       "iptables::default_rules": {
         "identifiers": [
           "RHEL-07-040920",
