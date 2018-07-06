@@ -1,5 +1,6 @@
-* Thu Jun 28 2018 Trevor Vaughan <tvaughan@onyxpoint.com> - 2.3.4-0
+* Fri Jul 06 2018 Trevor Vaughan <tvaughan@onyxpoint.com> - 2.3.4-0
 - DISA STIG changes:
+  - Added selinux::login_resources
   - Added gdm::settings
   - Added gdm::banner
   - Added gdm::simp_banner

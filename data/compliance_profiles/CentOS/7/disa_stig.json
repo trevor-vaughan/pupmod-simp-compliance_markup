@@ -1474,6 +1474,20 @@
         ],
         "value": "targeted"
       },
+      "selinux::login_resources": {
+        "identifiers": [
+          "RHEL-07-020020",
+          "SRG-OS-000324-GPOS-00125",
+          "CCI-002165",
+          "CCI-002235"
+        ],
+        "value": {
+          "__default__": {
+            "seuser": "user_u",
+            "mls_range": "SystemLow"
+          }
+        }
+      },
       "simp::admin::logged_shell": {
         "identifiers": [
           "RHEL-07-030310",
