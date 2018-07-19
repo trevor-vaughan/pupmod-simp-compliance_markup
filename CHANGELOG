@@ -1,5 +1,70 @@
-* Mon Mar 19 2018 Trevor Vaughan <tvaughan@onyxpoint.com> - 2.3.3-0
+* Thu Jul 19 2018 Trevor Vaughan <tvaughan@onyxpoint.com> - 2.3.4-0
 - Added support for Puppet 5 and OEL
+
+* Fri Jul 06 2018 Trevor Vaughan <tvaughan@onyxpoint.com> - 2.3.4-0
+- DISA STIG changes:
+  - Added selinux::login_resources
+  - Added gdm::settings
+  - Added gdm::banner
+  - Added gdm::simp_banner
+  - Added gdm::dconf_hash
+  - Added gnome::dconf_hash
+
+* Thu Jun 28 2018 Liz Nemsick <lnemsick.simp@gmail.com> - 2.3.4-0
+- DISA STIG changes:
+  - Updated for pupmod-simp-auditd 8.0.0.  This enforces the
+    'stig' audit profile, instead of the 'simp' audit profile.
+
+* Mon Jun 11 2018 Nick Miller <nick.miller@onyxpoint.com> - 2.3.4-0
+- DISA STIG changes:
+  - Added auditd::config::audit_profiles::simp::audit_crontab_cmd
+  - Added auditd::config::audit_profiles::simp::audit_pam_timestamp_check_cmd
+  - Added auditd::config::audit_profiles::simp::audit_passwd_cmds
+  - Added auditd::config::audit_profiles::simp::audit_postfix_cmds
+  - Added auditd::config::audit_profiles::simp::audit_priv_cmds
+  - Added auditd::config::audit_profiles::simp::audit_ssh_keysign_cmd
+
+* Wed Jun 06 2018 Chris Tessmer <chris.tessmer@onyxpoint.com> - 2.3.4-0
+- DISA STIG changes:
+  - Added auditd::config::audit_profiles::simp::audit_session_files
+  - Added auditd::config::audit_profiles::simp::audit_session_files_tag
+
+* Wed Jun 06 2018 Liz Nemsick <lnemsick.simp@gmail.com> - 2.3.4-0
+- DISA STIG changes:
+  - Added auditd::action_mail_acct entries
+  - Added auditd::config::audit_profiles::simp::audit_sudoers
+  - Added auditd::config::audit_profiles::simp::audit_selinux_cmds
+  - Added auditd::failure_mode
+  - Corrected auditd::enable identifiers
+
+* Fri May 18 2018 Jeanne Greulich <jeanne.greulich@onyxpoint.com> - 2.3.4-0
+- Added postfix main.cf settings to el7 DISA STIG.
+
+* Wed May 16 2018 Liz Nemsick <lnemsick.simp@gmail.com> - 2.3.4-0
+- Added aide::aliases entries for DISA STIG
+- Replaced OBE simp::yum::enable_auto_updates entries with
+  simp::yum::schedule::enable in all profiles
+- Added and updated simp::yum::schedules entries for DISA STIG
+- Added simp::sysctl entries to the DISA STIG profiles for
+  net.ipv4.conf.default.accept_source_route,
+  net.ipv4.conf.default.send_redirects, and
+  net.ipv6.conf.all.accept_source_route.
+
+* Fri May 04 2018 Jeanne Greulich <jeanne.greulich@onyxpoint.com> - 2.3.4-0
+- Added and updated ssh::server::conf entries for DISA STIG
+
+* Mon Apr 30 2018 Trevor Vaughan <tvaughan@onyxpoint.com> - 2.3.4-0
+- Added 'svckill::mode' to be 'enforcing' in STIG and 800-53 modes
+
+* Fri Apr 27 2018 Liz Nemsick <lnemsick.simp@gmail.com> - 2.3.4-0
+- Fixed the inappropriate value of useradd::useradd::inactive in
+  the DISA STIG profiles.  It is now set to 0.
+
+* Fri Mar 30 2018 Trevor Vaughan <tvaughan@onyxpoint.com> - 2.3.4-0
+- Update PAM settings in the `disa_stig` profile
+- Fixed issues with the compliance_map logic that were causing false results to
+  be added to the 'documented_missing_parameters' and
+  'documented_missing_resources' lists
 
 * Tue Mar 06 2018 Liz Nemsick <lnemsick.simp@gmail.com> - 2.3.3-0
 - Updated TMOUT setting in /etc/profile.d/simp.sh to match EL7 STIG

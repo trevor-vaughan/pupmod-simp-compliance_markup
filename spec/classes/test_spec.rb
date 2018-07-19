@@ -1,6 +1,4 @@
 require 'spec_helper'
-# vim: set expandtab ts=2 sw=2:
-
 # These can't work without an rspec-puppet patched to accept post_condition
 describe 'compliance_markup::test' do
   context 'supported operating systems' do
@@ -43,3 +41,5 @@ describe 'compliance_markup::test' do
     end
   end
 end
+
+# vim: set expandtab ts=2 sw=2:
