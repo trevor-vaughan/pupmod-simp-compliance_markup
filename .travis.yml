@@ -13,6 +13,7 @@ sudo: false
 
 bundler_args: --without development system_tests --path .vendor
 
+
 notifications:
   email: false
 
@@ -25,9 +26,6 @@ before_install:
   - rm -f Gemfile.lock
 
 jobs:
-  allow_failures:
-    - env: STRICT_VARIABLES=yes TRUSTED_NODE_DATA=yes PUPPET_VERSION="~> 5.0"
-
   include:
     - stage: check
       rvm: 2.4.1
@@ -78,7 +76,7 @@ jobs:
         - bundle exec rake spec_clean
         - bundle exec rake beaker:suites[default,docker]
       # PUPPET_VERSION can't handle a '~' here due to code in the test
-      env: PUPPET_VERSION="4.8.2"
+      env: PUPPET_VERSION="4.10.11"
 
     # This needs to be last since we have an acceptance test
     - stage: deploy
