@@ -5,7 +5,6 @@ test_name 'compliance_markup class enforcement'
 describe 'compliance_markup class enforcement' do
 
   def set_profile_data_on(host, hiera_yaml, profile_data)
-
     Dir.mktmpdir do |dir|
       tmp_yaml = File.join(dir, 'hiera.yaml')
       File.open(tmp_yaml, 'w') do |fh|
@@ -145,27 +144,21 @@ defaults:
           end
           context 'when disa is higher priority' do
             it 'should have /bin/disa in /etc/shells' do
+              set_profile_data_on(host, hiera_yaml, base_hieradata)
               apply_manifest_on(host, base_manifest, :catch_failures => true)
+
               result = on(host, 'cat /etc/shells').output.strip
               expect(result).to match(%r(/bin/disa))
-            end
-            it 'should not have /bin/nist in /etc/shells' do
-              apply_manifest_on(host, base_manifest, :catch_failures => true)
-              result = on(host, 'cat /etc/shells').output.strip
-              expect(result).to_not match(%r(/bin/nistl))
+              expect(result).to_not match(%r(/bin/nist))
             end
           end
           context 'when nist is higher priority' do
             it 'should have /bin/nist in /etc/shells' do
               set_profile_data_on(host, hiera_yaml, extra_hieradata)
               apply_manifest_on(host, base_manifest, :catch_failures => true)
+
               result = on(host, 'cat /etc/shells').output.strip
               expect(result).to match(%r(/bin/nist))
-            end
-            it 'should not have /bin/disa in /etc/shells' do
-              set_profile_data_on(host, hiera_yaml, extra_hieradata)
-              apply_manifest_on(host, base_manifest, :catch_failures => true)
-              result = on(host, 'cat /etc/shells').output.strip
               expect(result).to_not match(%r(/bin/disa))
             end
           end
