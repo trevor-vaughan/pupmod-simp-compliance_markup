@@ -31,57 +31,47 @@ describe 'compliance_markup class enforcement' do
     EOS
   }
 
-  let(:base_hieradata) { <<-EOF
----
-compliance_markup::enforcement:
-  - disa
+  let(:base_hieradata) {{
+    'compliance_markup::enforcement'    => ['disa'],
+    'compliance_markup::compliance_map' => {
+      'version' => '1.0.0',
+      'disa' => {
+        'useradd::shells' => {
+          'identifiers' => ['FOO2','BAR2'],
+          'notes' => 'Nothing fun really',
+          'value' => ['/bin/disa']
+        }
+      },
+      'nist' => {
+        'useradd::shells' => {
+          'identifiers' => ['FOO2','BAR2'],
+          'notes' => 'Nothing fun really',
+          'value' => ['/bin/nist']
+        }
+      }
+    }
+  }}
 
-compliance_markup::compliance_map:
-  version: 1.0.0
-  disa:
-    useradd::shells:
-      identifiers:
-        - FOO
-        - BAR
-      notes: Nothing fun really
-      value:
-        - /bin/disa
-  nist:
-    useradd::shells:
-      identifiers:
-        - FOO2
-        - BAR2
-      notes: Nothing fun really
-      value:
-        - /bin/nist
-                         EOF
-  }
-  let(:extra_hieradata) { <<-EOF
----
-compliance_markup::enforcement:
-  - nist
-  - disa
-
-compliance_markup::compliance_map:
-  version: 1.0.0
-  disa:
-    useradd::shells:
-      identifiers:
-        - FOO
-        - BAR
-      notes: Nothing fun really
-      value:
-        - /bin/disa
-  nist:
-    useradd::shells:
-      identifiers:
-        - FOO2
-        - BAR2
-      notes: Nothing fun really
-      value:
-        - /bin/nist
-                          EOF
-  }
+  let(:extra_hieradata) {{
+    'compliance_markup::enforcement'    => ['nist','disa'],
+    'compliance_markup::compliance_map' => {
+      'version' => '1.0.0',
+      'disa' => {
+        'useradd::shells' => {
+          'identifiers' => ['FOO2','BAR2'],
+          'notes' => 'Nothing fun really',
+          'value' => ['/bin/disa']
+        }
+      },
+      'nist' => {
+        'useradd::shells' => {
+          'identifiers' => ['FOO2','BAR2'],
+          'notes' => 'Nothing fun really',
+          'value' => ['/bin/nist']
+        }
+      }
+    }
+  }}
   let (:v3_hiera_yaml) { <<-EOM
 ---
 :backends:
@@ -111,23 +101,24 @@ defaults:
   }
 
   hosts.each do |host|
-    puppetver = SemanticPuppet::Version.parse(ENV.fetch('PUPPET_VERSION', '4.8.2'))
+    puppetver   = SemanticPuppet::Version.parse(ENV.fetch('PUPPET_VERSION', '4.8.2'))
     requiredver = SemanticPuppet::Version.parse("4.9.0")
     if (puppetver > requiredver)
-      versions = [ "v3", "v5" ]
+      versions = [ 'v3','v5' ]
     else
-      versions = [ "v3" ]
+      versions = [ 'v3' ]
     end
+
     versions.each do |version|
       context "with a #{version} hiera.yaml" do
         context 'with a single compliance map' do
           case version
-          when "v3"
+          when 'v3'
             let (:hiera_yaml)  { v3_hiera_yaml }
-          when "v5"
+          when 'v5'
             let (:hiera_yaml)  { v5_hiera_yaml }
           end
-          # Using puppet_apply as a helper
+
           it 'should work with no errors' do
             set_profile_data_on(host, hiera_yaml, base_hieradata)
             apply_manifest_on(host, base_manifest, :catch_failures => true)
@@ -142,6 +133,7 @@ defaults:
             result = on(host, 'cat /etc/shells').output.strip
             expect(result).to match(%r(/bin/sh))
           end
+
           context 'when disa is higher priority' do
             it 'should have /bin/disa in /etc/shells' do
               set_profile_data_on(host, hiera_yaml, base_hieradata)
@@ -152,6 +144,7 @@ defaults:
               expect(result).to_not match(%r(/bin/nist))
             end
           end
+
           context 'when nist is higher priority' do
             it 'should have /bin/nist in /etc/shells' do
               set_profile_data_on(host, hiera_yaml, extra_hieradata)

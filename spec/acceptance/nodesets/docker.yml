@@ -36,4 +36,4 @@ HOSTS:
 
 CONFIG:
   log_level: verbose
-  type:      aio
+  type: aio
