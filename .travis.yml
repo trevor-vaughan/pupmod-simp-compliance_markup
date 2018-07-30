@@ -74,7 +74,7 @@ jobs:
         - docker
       script:
         - bundle exec rake spec_clean
-        - bundle exec rake beaker:suites[default,docker]
+        - bundle exec rake beaker:suites[default,docker_centos]
       # PUPPET_VERSION can't handle a '~' here due to code in the test
       env: PUPPET_VERSION="4.8.2"
 
@@ -86,7 +86,7 @@ jobs:
         - docker
       script:
         - bundle exec rake spec_clean
-        - bundle exec rake beaker:suites[default,docker]
+        - bundle exec rake beaker:suites[default,docker_centos]
       # PUPPET_VERSION can't handle a '~' here due to code in the test
       env: PUPPET_VERSION="5.5.3" BEAKER_PUPPET_COLLECTION="puppet5"
 
