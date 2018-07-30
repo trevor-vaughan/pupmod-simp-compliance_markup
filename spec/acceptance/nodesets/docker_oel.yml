@@ -1,3 +1,10 @@
+<%
+  if ENV['BEAKER_HYPERVISOR']
+    hypervisor = ENV['BEAKER_HYPERVISOR']
+  else
+    hypervisor = 'vagrant'
+  end
+-%>
 HOSTS:
   el7-compliance-map:
     roles:
@@ -5,7 +12,7 @@ HOSTS:
       - primary
     platform: el-7-x86_64
     hypervisor: docker
-    image: centos:7
+    image: oraclelinux:7
     docker_cmd: '/usr/sbin/init'
     docker_preserve_image: true
     docker_image_commands:
@@ -22,7 +29,7 @@ HOSTS:
       - secondary
     platform: el-6-x86_64
     hypervisor: docker
-    image: centos:6
+    image: oraclelinux:6
     #docker_cmd: '/usr/sbin/init'
     docker_preserve_image: true
     docker_image_commands:
@@ -36,4 +43,7 @@ HOSTS:
 
 CONFIG:
   log_level: verbose
-  type: aio
+  type:      aio
+<% if ENV['BEAKER_PUPPET_ENVIRONMENT'] -%>
+  puppet_environment: <%= ENV['BEAKER_PUPPET_ENVIRONMENT'] %>
+<% end -%>
