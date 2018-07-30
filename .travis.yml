@@ -88,7 +88,7 @@ jobs:
         - bundle exec rake spec_clean
         - bundle exec rake beaker:suites[default,docker]
       # PUPPET_VERSION can't handle a '~' here due to code in the test
-      env: PUPPET_VERSION="5.4.0" BEAKER_PUPPET_COLLECTION="puppet5"
+      env: PUPPET_VERSION="5.5.3" BEAKER_PUPPET_COLLECTION="puppet5"
 
     # This needs to be last since we have an acceptance test
     - stage: deploy
