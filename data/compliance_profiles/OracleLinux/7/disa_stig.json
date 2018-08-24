@@ -912,7 +912,7 @@
           "SRG-OS-000327-GPOS-00127",
           "CCI-002234"
         ],
-        "value": "sudosh"
+        "value": "tlog"
       },
       "simp::ctrl_alt_del::enable": {
         "identifiers": [
@@ -1553,7 +1553,7 @@
         "value": {
           "programs": [
             "sudo",
-            "sudosh",
+            "tlog",
             "yum",
             "audispd",
             "auditd",

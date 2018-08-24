@@ -1,7 +1,7 @@
-* Thu Jul 19 2018 Trevor Vaughan <tvaughan@onyxpoint.com> - 2.3.4-0
+* Fri Aug 24 2018 Trevor Vaughan <tvaughan@onyxpoint.com> - 2.3.4-0
+- Change 'sudosh' to 'tlog' to support the switch to supported session logging
+  software
 - Added support for Puppet 5 and OEL
-
-* Fri Jul 06 2018 Trevor Vaughan <tvaughan@onyxpoint.com> - 2.3.4-0
 - DISA STIG changes:
   - Added selinux::login_resources
   - Added gdm::settings

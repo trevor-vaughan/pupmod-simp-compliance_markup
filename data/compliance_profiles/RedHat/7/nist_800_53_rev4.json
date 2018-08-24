@@ -1163,7 +1163,7 @@
           "AU-14",
           "AU-14(2)"
         ],
-        "value": "sudosh"
+        "value": "tlog"
       },
       "simp::admin::passwordless_admin_sudo": {
         "identifiers": [
@@ -2107,7 +2107,7 @@
         "value": {
           "programs": [
             "sudo",
-            "sudosh",
+            "tlog",
             "yum",
             "audispd",
             "auditd",
