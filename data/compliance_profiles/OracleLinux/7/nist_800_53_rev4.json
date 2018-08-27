@@ -1576,7 +1576,7 @@
         ],
         "value": 0
       },
-      "simp::yum::enable_auto_updates": {
+      "simp::yum::schedule::enable": {
         "identifiers": [
           "CM-3(3)",
           "CM-11(b)",
@@ -2106,21 +2106,21 @@
         "notes": "If the default security relevant logs are changed, they should be justified, especially if fewer than the SIMP default are configured",
         "value": {
           "programs": [
-            "sudo",
-            "tlog",
-            "yum",
             "audispd",
-            "auditd",
             "audit",
+            "auditd",
+            "crond",
+            "sudo",
             "systemd",
-            "crond"
+            "tlog",
+            "yum"
           ],
           "facilities": [
-            "cron.*",
+            "*.emerg",
             "authpriv.*",
+            "cron.*",
             "local6.*",
-            "local7.warn",
-            "*.emerg"
+            "local7.warn"
           ],
           "msg_starts": [
             " IPT:",
@@ -2471,6 +2471,12 @@
           "AU-9"
         ],
         "value": true
+      },
+      "svckill::mode": {
+        "identifiers": [
+          "CM-7"
+        ],
+        "value": "enforcing"
       },
       "tpm::ima::enable": {
         "identifiers": [
