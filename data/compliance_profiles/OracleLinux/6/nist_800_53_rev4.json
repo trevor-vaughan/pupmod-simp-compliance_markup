@@ -2106,13 +2106,17 @@
         "notes": "If the default security relevant logs are changed, they should be justified, especially if fewer than the SIMP default are configured",
         "value": {
           "programs": [
+            "aide",
             "audispd",
             "audit",
             "auditd",
             "crond",
             "sudo",
+            "sudosh",
             "systemd",
             "tlog",
+            "tlog-rec-session",
+            "-tlog-rec-session",
             "yum"
           ],
           "facilities": [

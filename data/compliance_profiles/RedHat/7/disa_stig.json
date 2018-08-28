@@ -2176,13 +2176,17 @@
         ],
         "value": {
           "programs": [
+            "aide",
             "audispd",
             "audit",
             "auditd",
             "crond",
             "sudo",
+            "sudosh",
             "systemd",
             "tlog",
+            "tlog-rec-session",
+            "-tlog-rec-session",
             "yum"
           ],
           "facilities": [
