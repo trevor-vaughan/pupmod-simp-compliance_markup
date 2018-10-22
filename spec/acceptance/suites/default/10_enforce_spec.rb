@@ -51,31 +51,28 @@ describe 'compliance_markup class enforcement' do
     }
   }}
 
-  let (:v3_hiera_yaml) { File.read('spec/acceptance/suites/default/files/hiera_v3.yaml') }
   let (:v5_hiera_yaml) { File.read('spec/acceptance/suites/default/files/hiera_v5.yaml') }
 
   hosts.each do |host|
-    puppetver   = SemanticPuppet::Version.parse(ENV.fetch('PUPPET_VERSION', '4.8.2'))
+    puppetver   = SemanticPuppet::Version.parse(ENV.fetch('PUPPET_VERSION', '4.10.4'))
     requiredver = SemanticPuppet::Version.parse("4.9.0")
     if (puppetver > requiredver)
-      versions = [ 'v3','v5' ]
+      versions = [ 'v5' ]
     else
-      versions = [ 'v3' ]
+      fail("Only puppet > #{requiredver} is supported moving forward")
     end
 
     versions.each do |version|
       context "with a #{version} hiera.yaml" do
         context 'with a single compliance map' do
           case version
-          when 'v3'
-            let (:hiera_yaml) { v3_hiera_yaml }
           when 'v5'
             let (:hiera_yaml) { v5_hiera_yaml }
           end
 
           it 'should work with no errors' do
             create_remote_file(host, '/etc/puppetlabs/puppet/hiera.yaml', hiera_yaml)
-            create_remote_file(host, '/etc/puppetlabs/code/hieradata/default.yaml', base_hieradata.to_yaml)
+            set_hieradata_on(host, base_hieradata)
             apply_manifest_on(host, base_manifest, :catch_failures => true)
           end
 
@@ -92,7 +89,7 @@ describe 'compliance_markup class enforcement' do
           context 'when disa is higher priority' do
             it 'should have /bin/disa in /etc/shells' do
               create_remote_file(host, '/etc/puppetlabs/puppet/hiera.yaml', hiera_yaml)
-              create_remote_file(host, '/etc/puppetlabs/code/hieradata/default.yaml', base_hieradata.to_yaml)
+              set_hieradata_on(host, base_hieradata)
 
               apply_manifest_on(host, base_manifest, :catch_failures => true)
 
@@ -105,7 +102,7 @@ describe 'compliance_markup class enforcement' do
           context 'when nist is higher priority' do
             it 'should have /bin/nist in /etc/shells' do
               create_remote_file(host, '/etc/puppetlabs/puppet/hiera.yaml', hiera_yaml)
-              create_remote_file(host, '/etc/puppetlabs/code/hieradata/default.yaml', extra_hieradata.to_yaml)
+              set_hieradata_on(host, extra_hieradata)
 
               apply_manifest_on(host, base_manifest, :catch_failures => true)
 
