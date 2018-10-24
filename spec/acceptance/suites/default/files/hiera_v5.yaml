@@ -4,7 +4,7 @@ hierarchy:
   - name: Compliance
     lookup_key: compliance_markup::enforcement
   - name: Common
-    path: default.yaml
+    path: common.yaml
 defaults:
   data_hash: yaml_data
-  datadir: /etc/puppetlabs/code/hieradata
+  datadir: /etc/puppetlabs/code/environments/production/hieradata
