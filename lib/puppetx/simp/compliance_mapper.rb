@@ -26,7 +26,7 @@
 # natively, while Hiera v3 has to create it itself
 
 
-def enforcement(key, options = {"mode" => "value"}, &block)
+def enforcement(key, context=self, options={"mode" => "value"}, &block)
   # Throw away keys we know we can't handle.
   # This also prevents recursion since these are the only keys internally we call.
   case key
@@ -45,27 +45,43 @@ def enforcement(key, options = {"mode" => "value"}, &block)
       throw :no_such_key
     when "compliance_markup::percent_sign"
       throw :no_such_key
-  else
+    else
       retval = :notfound
-      if cache_has_key("lock")
-        lock = cached_value("lock")
+
+      if context.cache_has_key("lock")
+        lock = context.cached_value("lock")
       else
         lock = false
       end
+
       if lock == false
 
         debug_output = {}
-        cache("lock", true)
+
+        context.cache("lock", true)
 
         begin
           profile_list = cached_lookup "compliance_markup::enforcement", [], &block
+
           unless (profile_list == [])
             debug("debug: compliance_markup::enforcement set to #{profile_list}, attempting to enforce")
 
             profile = profile_list.hash.to_s
 
-            if cache_has_key("compliance_map_#{profile}")
-              profile_map = cached_value("compliance_map_#{profile}")
+            if context.cache_has_key("compliance_map_#{profile}")
+              # If we have a cache for this profile, we've already found
+              # everything that we're going to find.
+              if context.cache_has_key(key)
+                return cached_value(key)
+              else
+                throw :no_such_key
+              end
+
+              profile_map = context.cached_value("compliance_map_#{profile}")
+
+              # In this case, we've already loaded everything and didn't find
+              # anything at all so go ahead and bail.
+              throw :no_such_key if (profile_map && profile_map.empty?)
             else
               debug("debug: compliance map for #{profile_list} not found, starting compiler")
 
@@ -77,9 +93,17 @@ def enforcement(key, options = {"mode" => "value"}, &block)
               profile_map = profile_compiler.list_puppet_params(profile_list).cook do |item|
                 debug_output[item["parameter"]] = item["telemetry"]
                 item[options["mode"]]
+
+                # Add this parameter to the context cache so that it is
+                # preserved between calls.
+                #
+                # This allows us to prevent deep recursion and repeated digging
+                # into files with no benefit.
+                context.cache(item["parameter"], item["value"])
               end
 
-              cache("debug_output_#{profile}", debug_output)
+              context.cache("debug_output_#{profile}", debug_output)
+              context.cache("compliance_map_#{profile}", profile_map)
 
               compile_end_time = Time.now
 
@@ -123,16 +147,16 @@ def enforcement(key, options = {"mode" => "value"}, &block)
           end
         rescue
         ensure
-          cache("lock", false)
+          context.cache("lock", false)
         end
       end
       if retval == :notfound
         throw :no_such_key
       end
   end
+
   return retval
 end
-
 
 # These cache functions are assumed to be created by the wrapper
 # object, either the v3 backend or v5 backend.
@@ -609,7 +633,22 @@ def compiler_class()
             end
 
             if version.major == 1
-              result = v1_parser(profile_map, map)
+              v1_data = v1_parser(profile_map, map)
+
+              result = {}
+              # Convert this into what cook() is looking for
+              v1_data.each do |item, data|
+                result[item] = {
+                  'parameter' => item,
+                  'value'     => data['value'],
+                  'type'      => 'puppet',
+                  'settings'  => {
+                    'parameter' => item,
+                    'value'     => data['value']
+                  }
+                }
+              end
+
               v1_table.merge!(result)
             end
           end
