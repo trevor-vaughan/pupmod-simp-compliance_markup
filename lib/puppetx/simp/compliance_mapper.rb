@@ -455,7 +455,7 @@ def compiler_class()
                             unless key == "parameter"
                               case current[key].class.to_s
                                 when "Array"
-                                  current[key].merge!(value)
+                                  current[key] = (current[key] + Array(value)).uniq
                                 when "Hash"
                                   current[key].merge!(value)
                                 else
