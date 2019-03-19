@@ -1,23 +1,15 @@
-Puppet::Functions.create_function(:'compliance_markup::enforcement') do
+Puppet::Functions.create_function(:'compliance_markup::enforcement', Puppet::Functions::InternalFunction) do
   dispatch :hiera_enforcement do
+    scope_param()
     param "String", :key
     param "Hash", :options
     param "Puppet::LookupContext", :context
-    end
-  dispatch :hiera_enforcement do
-    param "String", :key
-    param "Hash", :options
-    param "Undef", :context
   end
 
-  def initialize(closure_scope, loader)
+  def hiera_enforcement(scope, key, options, context)
     filename = File.expand_path('../../../../puppetx/simp/compliance_mapper.rb', __FILE__)
+    self.instance_eval(File.read(filename), filename)
 
-    self.instance_eval(File.read(filename),filename)
-    super(closure_scope, loader)
-  end
-
-  def hiera_enforcement(key, options, context)
     retval = nil
 
     # This is needed to prevent infinite looping. Usually, the lookup function
@@ -25,8 +17,18 @@ Puppet::Functions.create_function(:'compliance_markup::enforcement') do
     # scoping. However, in our case, we're actually looking across modules and
     # need to maintain the same context at all times to ensure that caching
     # works properly.
+    if @context
+      # This should never be called, but we're going to be extra safe and reload
+      # the underlying mapper code if it is.
+      if @context.environment_name != context.environment_name
+        filename = File.expand_path('../../../../puppetx/simp/compliance_mapper.rb', __FILE__)
+        self.instance_eval(File.read(filename), filename)
 
-    @context ||= context
+        @context = context
+      end
+    else
+      @context ||= context
+    end
 
     # Quick return if we already have a cached value for the key.
     return cached_value(key) if cached_value(key)
@@ -43,7 +45,6 @@ Puppet::Functions.create_function(:'compliance_markup::enforcement') do
     end
 
     # Add the key to the cache if we found something
-
     cache(key, retval) if retval
 
     retval
