@@ -4,14 +4,13 @@ test_name 'compliance_markup class'
 
 describe 'compliance_markup class' do
   let(:manifest) {
-    <<-EOS
+    <<~EOS
       $compliance_profile = 'test_policy'
 
       class test (
         $var1 = 'test1'
       ) {
-        compliance_map('test_policy', 'INTERNAL1', 'Test Note')
-        compliance_markup::compliance_map('test_policy', 'INTERNAL2', 'Other Note')
+        compliance_markup::compliance_map('test_policy', 'INTERNAL', 'Note')
       }
 
       include 'test'
@@ -20,27 +19,27 @@ describe 'compliance_markup class' do
   }
 
   let(:compliant_hieradata) {
-    <<-EOS
----
-compliance_map :
-  test_policy :
-    test::var1 :
-      'identifiers' :
-        - 'TEST_POLICY1'
-      'value' : 'test1'
+    <<~EOS
+    ---
+    compliance_map :
+      test_policy :
+        test::var1 :
+          'identifiers' :
+            - 'TEST_POLICY1'
+          'value' : 'test1'
     EOS
   }
 
   let(:non_compliant_hieradata) {
-    <<-EOS
----
-compliance_map :
-  test_policy :
-    test::var1 :
-      'identifiers' :
-        - 'TEST_POLICY1'
-      'value' : 'not test1'
-EOS
+    <<~EOS
+    ---
+    compliance_map :
+      test_policy :
+        test::var1 :
+          'identifiers' :
+            - 'TEST_POLICY1'
+          'value' : 'not test1'
+    EOS
   }
 
   hosts.each do |host|

@@ -334,23 +334,28 @@ if $::circumstance {
 
 ## Enforcement
 
-This module also contains an **experimental** Hiera backend that can be used to
-enforce compliance profile settings on any module when it is included. It uses
-the compliance_markup::enforcement array to determine the profiles to use, and
+This module also contains a Hiera backend that can be used to enforce compliance
+profile settings on any module when it is included. It uses the
+`compliance_markup::enforcement` Array to determine the profiles to use, and
 which profiles take priority.
 
-Only a modern Hiera v5 backend have been provided. Because of this, the Hiera
-backend is only available on versions of Puppet 4.10 or above.
+Only a Hiera v5 backend is provided. Because of this, the Hiera backend is only
+available on versions of Puppet 4.10 or above.
 
 
 ### v5 Backend Configuration
 
-```ruby
+```yaml
 ---
 version: 5
 hierarchy:
   - name: SIMP Compliance Engine
     lookup_key: compliance_markup::enforcement
+    # All options are optional
+    options:
+      # Ignore all default data dirs and use these instead
+      data_dirs:
+        - /fully/qualified/data_dir
   - name: Common
     path: default.yaml
 defaults:

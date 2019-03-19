@@ -155,7 +155,8 @@ def get_compliance_profiles
   # ENC compatible lookup
   compliance_profiles ||= lookup_global_silent('compliance_markup::validate_profiles')
   # Module-level lookup
-  compliance_profiles ||= @context.catalog.resource('Class[compliance_markup]')[:validate_profiles]
+  compliance_class_resource = @context.catalog.resource('Class[compliance_markup]')
+  compliance_profiles ||= compliance_class_resource[:validate_profiles] if compliance_class_resource
 
   return compliance_profiles
 end

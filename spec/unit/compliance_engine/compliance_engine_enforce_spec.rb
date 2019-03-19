@@ -1,9 +1,5 @@
 require 'spec_helper'
 
-# Remove v1 data. Can be removed once compliance_markup::debug::enabled_sce_versions is implemented
-v1_profiles = './spec/fixtures/modules/compliance_markup/data/compliance_profiles'
-FileUtils.rm_rf(v1_profiles) if File.directory?(v1_profiles)
-
 # This is the class that needs to be added to the catalog last to make the
 # reporting work.
 describe 'compliance_markup', type: :class do

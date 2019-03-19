@@ -6,6 +6,7 @@ compliance_markup::validate_profiles:
 compliance_markup::report_on_client: true
 compliance_markup::report_on_server: false
 compliance_markup::report_types:
+  - 'compliant'
   - 'non_compliant'
   - 'unknown_parameters'
   - 'unknown_resources'
