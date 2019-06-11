@@ -173,37 +173,33 @@ module Puppet::Parser::Functions
         }
     ENDHEREDOC
 
-        #
-        # Dynamic per-environment code loader.
-        #
-        # XXX ToDo
-        # This is persisted into the catalog ONLY to support compliance report
-        # custom entries.
-        #
-        # See the compliance_map.rb source code, but these may not be necessary.
-        # If that functionality is removed, return this logic to being instantiated each time.
+      #
+      # Dynamic per-environment code loader.
+      #
+      # XXX ToDo
+      # This is persisted into the catalog ONLY to support compliance report
+      # custom entries.
+      #
+      # See the compliance_map.rb source code, but these may not be necessary.
+      # If that functionality is removed, return this logic to being instantiated each time.
 
-        catalog = find_global_scope.catalog
-        begin
-            compliance_report_generator = catalog._compliance_report_generator
-        rescue
-            catalog.instance_eval do
-                def _compliance_report_generator()
-                    @_compliance_report_generator
-                end
-                def _compliance_report_generator=(value)
-                    @_compliance_report_generator = value
-                end
-            end
-            object = Object.new()
-            myself = __FILE__
-            filename = File.dirname(File.dirname(File.dirname(File.dirname(myself)))) + "/puppetx/simp/compliance_map.rb"
-            object.instance_eval(File.read(filename), filename)
-            filename = File.dirname(File.dirname(File.dirname(File.dirname(myself)))) + "/puppetx/simp/compliance_mapper.rb"
-            object.instance_eval(File.read(filename), filename)
-            catalog._compliance_report_generator = object;
-            compliance_report_generator = object;
-        end
+      catalog = find_global_scope.catalog
+
+      compliance_report_generator = catalog.instance_variable_get(:@simp_compliance_report_generator)
+
+      unless compliance_report_generator
+        object = Object.new()
+
+        filename = File.join(__dir__, '..', '..', '..', 'puppetx', 'simp', 'compliance_map.rb')
+        object.instance_eval(File.read(filename), filename)
+
+        filename = File.join(__dir__, '..', '..', '..', 'puppetx', 'simp', 'compliance_mapper.rb')
+        object.instance_eval(File.read(filename), filename)
+
+        catalog.instance_variable_set(:@simp_compliance_report_generator, object)
+        compliance_report_generator = catalog.instance_variable_get(:@simp_compliance_report_generator)
+      end
+
     compliance_report_generator.compliance_map(args, self)
   end
 end
