@@ -1,6 +1,6 @@
 {
   "name": "simp-compliance_markup",
-  "version": "2.4.2",
+  "version": "2.4.3",
   "author": "SIMP Team",
   "summary": "Compliance-mapping annotation for Puppet code",
   "license": "Apache-2.0",
@@ -49,7 +49,7 @@
   "requirements": [
     {
       "name": "puppet",
-      "version_requirement": ">= 4.10.4 < 6.0.0"
+      "version_requirement": ">= 5.0.0 < 7.0.0"
     }
   ]
 }
