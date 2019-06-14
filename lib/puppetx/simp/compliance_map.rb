@@ -263,6 +263,9 @@ def compliance_map(args, context)
   profile_list = get_compliance_profiles
 
   Array(profile_list).each do |profile|
+    num_compliant = 0
+    num_non_compliant = 0
+
     profile_report = {}
 
     if main_config[:custom_call]
@@ -315,6 +318,12 @@ def compliance_map(args, context)
               section = (current_value == expected_value) ? 'compliant' : 'non_compliant'
             end
 
+            if section == 'compliant'
+              num_compliant += 1
+            else
+              num_non_compliant += 1
+            end
+
             if report_types.include?(section) && !result.nil?
               profile_report[section] ||= {}
               profile_report[section][classkey] ||= {}
@@ -337,7 +346,7 @@ def compliance_map(args, context)
     end
 
     profile_report['custom_entries'] = @custom_entries[profile] if @custom_entries[profile]
-    profile_report['summary'] = summary(profile_report)
+    profile_report['summary'] = summary(profile_report, num_compliant, num_non_compliant)
 
     report['compliance_profiles'][profile] = profile_report
   end
@@ -350,20 +359,11 @@ end
 # Create a summary from a profile report.
 #
 
-def summary(profile_report)
-  report = {}
-
-  num_compliant = 0
-  if profile_report['compliant']
-    report['compliant'] = profile_report['compliant'].keys.count
-    num_compliant = report['compliant']
-  end
-
-  num_non_compliant = 0
-  if profile_report['non_compliant']
-    report['non_compliant'] = profile_report['non_compliant'].keys.count
-    num_non_compliant = report['non_compliant']
-  end
+def summary(profile_report, num_compliant, num_non_compliant)
+  report = {
+    'compliant'     => num_compliant,
+    'non_compliant' => num_non_compliant
+  }
 
   if profile_report['documented_missing_parameters']
     report['documented_missing_parameters'] = profile_report['documented_missing_parameters'].count
@@ -376,7 +376,7 @@ def summary(profile_report)
   total_checks = num_non_compliant + num_compliant
   report['percent_compliant'] = total_checks == 0 ? 0 : ((num_compliant.to_f/total_checks) * 100).round(0)
 
-  report
+  return report
 end
 
 def add_custom_entries(main_config)
