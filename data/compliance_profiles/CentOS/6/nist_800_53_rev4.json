@@ -1363,12 +1363,6 @@
         ],
         "value": false
       },
-      "simp::sssd::client::ldap_domain": {
-        "identifiers": [
-          "IA-2"
-        ],
-        "value": true
-      },
       "simp::sssd::client::min_id": {
         "identifiers": [
           "IA-2"

@@ -190,10 +190,10 @@ module Puppet::Parser::Functions
       unless compliance_report_generator
         object = Object.new()
 
-        filename = File.join(__dir__, '..', '..', '..', 'puppetx', 'simp', 'compliance_map.rb')
+        filename = File.join(File.dirname(__FILE__), '..', '..', '..', 'puppetx', 'simp', 'compliance_map.rb')
         object.instance_eval(File.read(filename), filename)
 
-        filename = File.join(__dir__, '..', '..', '..', 'puppetx', 'simp', 'compliance_mapper.rb')
+        filename = File.join(File.dirname(__FILE__), '..', '..', '..', 'puppetx', 'simp', 'compliance_mapper.rb')
         object.instance_eval(File.read(filename), filename)
 
         catalog.instance_variable_set(:@simp_compliance_report_generator, object)

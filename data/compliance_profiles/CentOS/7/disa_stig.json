@@ -1625,14 +1625,6 @@
         ],
         "value": false
       },
-      "simp::sssd::client::ldap_domain": {
-        "identifiers": [
-          "RHEL-07-010000",
-          "SRG-OS-000001-GPOS-00001",
-          "CCI-000015"
-        ],
-        "value": true
-      },
       "simp::sssd::client::min_id": {
         "identifiers": [
           "RHEL-07-010000",
