@@ -232,7 +232,7 @@ def compiler_class()
                       @compliance_data[filename] = JSON.parse(File.read(filename))
                   end
                 rescue
-                  Hiera.warn(%{compliance_engine: Invalid '#{type}' file found at '#{filename}'})
+                  warn(%{compliance_engine: Invalid '#{type}' file found at '#{filename}'})
                 end
               end
             end
