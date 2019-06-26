@@ -1,3 +1,6 @@
+* Tue Jun 25 2019 Trevor Vaughan <tvaughan@onyxpoint.com> - 2.4.5-0
+- Fix call to Hiera.warn in the compliance mapper
+
 * Mon Jun 24 2019 Trevor Vaughan <tvaughan@onyxpoint.com> - 2.4.4-0
 - Revert change from __dir__ to File.dirname(__FILE__) in compliance_map.rb due
   to discovered incompatibility with some puppetserver configurations.
