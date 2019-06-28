@@ -282,13 +282,14 @@ def compliance_map(args, context)
           base_resource = resource_parts.join('::')
 
           res = @catalog.resource("Class[#{base_resource}]")
+
           unless res
-            define_name = resource_parts.pop
             define_resource_name = resource_parts.map { |x| x.capitalize }.join('::')
 
-            if define_resource_name && !define_resource_name.empty?
-              res = @catalog.resource("#{define_resource_name}[#{define_name}]")
-            end
+            # This only finds the first instance but this limits the amount of
+            # work done every time this runs. Will probably need to figure out
+            # a better way to do this in the future.
+            res = @catalog.resources.find{|r| r.to_s =~ /#{define_resource_name}/}
           end
         end
 
