@@ -374,7 +374,7 @@ describe 'compliance_markup' do
               end
 
               it 'should not include an empty non_compliant report section' do
-                expect( report['compliance_profiles'][profile_name]['non_compliant'] ).to be_nil
+                expect( report['compliance_profiles'][profile_name]['non_compliant'] ).to_not be_empty
               end
 
               it 'should have a documented_missing_resources section' do
@@ -495,7 +495,7 @@ describe 'compliance_markup' do
               end
 
               it 'should not include an empty non_compliant report section' do
-                expect( report['compliance_profiles'][profile_name]['non_compliant'] ).to be_nil
+                expect( report['compliance_profiles'][profile_name]['non_compliant'] ).to_not be_empty
               end
 
               it 'should not include an empty documented_missing_resources section' do
@@ -522,7 +522,8 @@ describe 'compliance_markup' do
                 if report['compliance_profiles'][profile_name]['summary']['compliant'] + report['compliance_profiles'][profile_name]['summary']['non_compliant'] == 0
                   expect( report['compliance_profiles'][profile_name]['summary']['percent_compliant'] ).to eq(0)
                 else
-                  expect( report['compliance_profiles'][profile_name]['summary']['percent_compliant'] ).to eq(100)
+                  # The bad defined type causes this
+                  expect( report['compliance_profiles'][profile_name]['summary']['percent_compliant'] ).to eq(75)
                 end
               end
             end

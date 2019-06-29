@@ -9,4 +9,3 @@ define compliance_markup::map (
 ) {
   compliance_map($options)
 }
-
