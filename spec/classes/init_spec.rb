@@ -46,18 +46,18 @@ describe 'compliance_markup' do
 
             context 'when running with the inbuilt data' do
               pre_condition_common = <<-EOM
-                class auditd (
+                class yum (
                   # This should trigger a finding
-                  $at_boot = false
+                  $config_options = {}
                 ) { }
 
-                include auditd
+                include yum
               EOM
 
               if facts[:os][:release][:major] == '6'
                 let(:pre_condition) {
                   <<-EOM
-                    $compliance_profile = ['nist_800_53_rev4']
+                    $compliance_profile = ['nist_800_53:rev4']
 
                     #{pre_condition_common}
                   EOM
@@ -65,7 +65,7 @@ describe 'compliance_markup' do
               else
                 let(:pre_condition) {
                   <<-EOM
-                    $compliance_profile = ['disa_stig', 'nist_800_53_rev4']
+                    $compliance_profile = ['disa_stig', 'nist_800_53:rev4']
 
                     #{pre_condition_common}
                   EOM
@@ -84,7 +84,7 @@ describe 'compliance_markup' do
               end
 
               it 'should have a failing check' do
-                expect( report['compliance_profiles']['nist_800_53_rev4']['non_compliant'] ).to_not be_empty
+                expect( report['compliance_profiles']['nist_800_53:rev4']['non_compliant'] ).to_not be_empty
               end
 
               it 'should not have ruby serialized objects in the output' do
@@ -299,7 +299,7 @@ describe 'compliance_markup' do
                 expect(report['fqdn']).to eq(facts[:fqdn])
                 expect(report['hostname']).to eq(facts[:hostname])
                 expect(report['ipaddress']).to eq(facts[:ipaddress])
-                expect(report['puppetserver_info']).to eq('local_compile')
+                expect(report['puppetserver_info']).to eq(server_facts_hash.merge({'environment' => environment}))
               end
             end
 
