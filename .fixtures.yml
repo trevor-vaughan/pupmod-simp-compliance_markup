@@ -1,8 +1,15 @@
 ---
 fixtures:
   repositories:
+    augeas_core:
+      repo: https://github.com/simp/pupmod-puppetlabs-augeas_core.git
+      puppet_version: ">= 6.0.0"
     simplib: https://github.com/simp/pupmod-simp-simplib
     stdlib: https://github.com/simp/puppetlabs-stdlib
     useradd: https://github.com/simp/pupmod-simp-useradd
+    yum: https://github.com/simp/voxpupuli-yum
+    yumrepo_core:
+      repo: https://github.com/simp/pupmod-puppetlabs-yumrepo_core.git
+      puppet_version: ">= 6.0.0"
   symlinks:
     compliance_markup: "#{source_dir}"

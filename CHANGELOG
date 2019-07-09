@@ -1,4 +1,9 @@
-* Fri Jun 28 2019 Trevor Vaughan <tvaughan@onyxpoint.com> - 2.4.6-0
+* Sun Jul 07 2019 Trevor Vaughan <tvaughan@onyxpoint.com> - 3.0.0-0
+- Remove the experimental v1 data since it is no longer used
+- Remove partial v2 data sets
+- Add v2 data for the non-SIMP `yum` module
+
+* Fri Jun 28 2019 Trevor Vaughan <tvaughan@onyxpoint.com> - 2.5.0-0
 - Fix compliance markup validation for Defined Types
 
 * Tue Jun 25 2019 Trevor Vaughan <tvaughan@onyxpoint.com> - 2.4.5-0
