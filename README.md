@@ -4,56 +4,57 @@
 [![Puppet Forge Downloads](https://img.shields.io/puppetforge/dt/simp/compliance_markup.svg)](https://forge.puppetlabs.com/simp/compliance_markup)
 [![Build Status](https://travis-ci.org/simp/pupmod-simp-compliance_markup.svg)](https://travis-ci.org/simp/pupmod-simp-compliance_markup)
 
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 Table of Contents
 
-- [Overview](#overview)
-- [Module Description](#module-description)
-- [Upgrading](#upgrading)
-- [Reporting](#reporting)
-  - [What compliance_markup affects](#what-compliance_markup-affects)
-- [Usage](#usage)
-  - [Report Format](#report-format)
-  - [Options](#options)
-    - [report_types](#report_types)
-    - [site_data](#site_data)
-    - [client_report](#client_report)
-    - [server_report](#server_report)
-    - [server_report_dir](#server_report_dir)
-    - [server_report_dir](#server_report_dir-1)
-    - [catalog_to_compliance_map](#catalog_to_compliance_map)
-- [Reference](#reference)
-  - [Example 1 - Standard Usage](#example-1---standard-usage)
-  - [Example 2 - Custom Compliance Map](#example-2---custom-compliance-map)
-- [Enforcement](#enforcement)
-  - [v5 Backend Configuration](#v5-backend-configuration)
-  - [Configuring profiles to enforce](#configuring-profiles-to-enforce)
-- [Limitations](#limitations)
-- [Development](#development)
-  - [Acceptance tests](#acceptance-tests)
-- [Packaging](#packaging)
+<!-- vim-markdown-toc GFM -->
 
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+* [Overview](#overview)
+* [Module Description](#module-description)
+* [Upgrading](#upgrading)
+* [Reporting](#reporting)
+  * [What compliance_markup affects](#what-compliance_markup-affects)
+* [Usage](#usage)
+  * [Report Format](#report-format)
+  * [Options](#options)
+    * [report_types](#report_types)
+    * [site_data](#site_data)
+    * [client_report](#client_report)
+    * [server_report](#server_report)
+    * [server_report_dir](#server_report_dir)
+    * [server_report_dir](#server_report_dir-1)
+    * [catalog_to_compliance_map](#catalog_to_compliance_map)
+* [Reference](#reference)
+  * [Example 1 - Standard Usage](#example-1---standard-usage)
+  * [Example 2 - Custom Compliance Map](#example-2---custom-compliance-map)
+* [Enforcement](#enforcement)
+  * [v5 Backend Configuration](#v5-backend-configuration)
+  * [Configuring profiles to enforce](#configuring-profiles-to-enforce)
+* [Limitations](#limitations)
+* [Development](#development)
+  * [Acceptance tests](#acceptance-tests)
+* [Packaging](#packaging)
+
+<!-- vim-markdown-toc -->
 
 ## Overview
 
-This module adds a function `compliance_map()` to the Puppet language. The
-`compliance_map()` function provides the ability for users to compare their
-in-scope class parameters against a set of *compliant* parameters, either in
-Hiera or at the global scope. Users may also provide custom inline policy
-documentation and mapping documentation.
+This module adds a function `compliance_markup::compliance_map()` to the Puppet
+language. The `compliance_markup::compliance_map()` function provides the
+ability for users to compare their in-scope class parameters against a set of
+*compliant* parameters, either in Hiera or at the global scope. Users may also
+provide custom inline policy documentation and mapping documentation.
 
 The goal of this module is to make it easier for users to both detect, and
 report on, deviations from a given policy inside their Puppet codebase.
 
 ## Module Description
 
-This module provides the function `compliance_map()` and a `compliance_markup`
-class for including the functionality into your stack at the global level.
+This module provides the function `compliance_markup::compliance_map()` and a
+`compliance_markup` class for including the functionality into your stack at
+the global level.
 
-A utility for converting your old `compliance_map()` Hiera data has also been
-included in the `utils` directory.
+A utility for converting your old `compliance_markup::compliance_map()` Hiera
+data has also been included in the `utils` directory.
 
 ## Upgrading
 
@@ -73,8 +74,8 @@ deploying them into production.
 
 ### What compliance_markup affects
 
-By default, the `compliance_map()` function creates a set of reports, one per
-node, on your Puppet Server at
+By default, the `compliance_markup::compliance_map()` function creates a set of
+reports, one per node, on your Puppet Server at
 `/opt/puppetlabs/server/data/puppetserver/simp/compliance_reports/<fqdn>`.
 
 You may optionally enable the creation of a `File` resource on each of your
@@ -83,9 +84,9 @@ clients if you wish to have changes in this data automatically exported into
 
 ## Usage
 
-The `compliance_map()` function provides a mechanism for mapping compliance
-data to settings in Puppet and should be globally activated by `including` the
-`compliance_markup` class.
+The `compliance_markup::compliance_map()` function provides a mechanism for
+mapping compliance data to settings in Puppet and should be globally activated
+by `including` the `compliance_markup` class.
 
 It is primarily designed for use in classes to validate that parameters are
 properly set but may also be used to perform a *full* compliance report against
@@ -120,9 +121,10 @@ would use something like the following:
         'value'      : false
 ```
 
-Alternatively, you may use the `compliance_map()` function to add compliance
-data to your modules outside of a parameter mapping. This is useful if you have
-more advanced logic that is required to meet a particular internal requirement.
+Alternatively, you may use the `compliance_markup::compliance_map()` function
+to add compliance data to your modules outside of a parameter mapping. This is
+useful if you have more advanced logic that is required to meet a particular
+internal requirement.
 
 **NOTE:** The parser does not know what line number and, possibly, what file
 the function is being called from based on the version of the Puppet parser
@@ -216,8 +218,9 @@ A String, or Array that denotes which types of reports should be generated.
   reported.
   * *unknown_parameters*: Reference parameters without a system value will be
   reported.
-  * *custom_entries*: Any one-off custom calls to compliance_map will be
-  reported.
+  * *custom_entries*: Any one-off custom calls to
+    compliance_markup::compliance_map will be
+    reported.
 
 #### site_data
 
@@ -322,7 +325,7 @@ compliance_map :
 
 ```ruby
 if $::circumstance {
-  compliance_map('my_policy','POLICY_SECTION_ID','Note about this section')
+  compliance_markup::compliance_map('my_policy','POLICY_SECTION_ID','Note about this section')
   ...code that applies POLICY_SECTION_ID...
 }
 ```
@@ -369,9 +372,9 @@ compliance_markup::enforcement: [ 'disa_stig', 'nist_800_53_rev4' ]
 
 ## Limitations
 
-Depending on the version of Puppet being used, the `compliance_map()` function
-may not be able to precisely determine where the function has been called and a
-best guess may be provided.
+Depending on the version of Puppet being used, the
+`compliance_markup::compliance_map()` function may not be able to precisely
+determine where the function has been called and a best guess may be provided.
 
 ## Development
 

@@ -1,5 +1,7 @@
 module Puppet::Parser::Functions
     newfunction(:compliance_map, :doc => <<-'ENDHEREDOC') do |args|
+      @summary DEPRECATED: Use compliance_markup::compliance_map()
+
       This function provides a mechanism for mapping compliance data to
       settings in Puppet.
 
@@ -182,6 +184,8 @@ module Puppet::Parser::Functions
       #
       # See the compliance_map.rb source code, but these may not be necessary.
       # If that functionality is removed, return this logic to being instantiated each time.
+
+      function_simplib_deprecation(['compliance_map', 'compliance_map is deprecated and will be removed in a future release. Please use compliance_markup::compliance_map()'])
 
       catalog = find_global_scope.catalog
 

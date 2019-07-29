@@ -11,6 +11,7 @@ describe 'compliance_markup class' do
         $var1 = 'test1'
       ) {
         compliance_map('test_policy', 'INTERNAL1', 'Test Note')
+        compliance_markup::compliance_map('test_policy', 'INTERNAL2', 'Other Note')
       }
 
       include 'test'
