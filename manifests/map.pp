@@ -7,5 +7,5 @@
 define compliance_markup::map (
   $options = {}
 ) {
-  compliance_map($options)
+  compliance_markup::compliance_map($options)
 }
