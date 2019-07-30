@@ -145,6 +145,8 @@ describe 'compliance_markup' do
                   $arg1_2 = 'foo1_2'
                 ){
                   notify { 'bar': message => $arg1_1 }
+                  compliance_markup::compliance_map('other_profile', 'IN_CLASS')
+                  compliance_markup::compliance_map('other_profile', 'IN_CLASS2', 'Some Notes')
                 }
 
                 class test2 {
@@ -192,6 +194,8 @@ describe 'compliance_markup' do
                   $arg1_2 = 'foo1_2'
                 ){
                   notify { 'bar': message => $arg1_1 }
+                  compliance_markup::compliance_map('other_profile', 'IN_CLASS')
+                  compliance_markup::compliance_map('other_profile', 'IN_CLASS2', 'Some Notes')
                 }
 
                 class test2 {
@@ -295,11 +299,52 @@ describe 'compliance_markup' do
                 expect(File).to exist("#{params['options']['server_report_dir']}/#{facts[:fqdn]}/compliance_report.#{report_format}")
               end
 
+              it 'should have a summary for each profile' do
+                report['compliance_profiles'].each do |compliance_profile, data|
+                  expect(data['summary']).to_not be_nil
+                  expect(data['summary']).to_not be_empty
+
+                  all_report_types = [
+                    'compliant',
+                    'non_compliant',
+                    'documented_missing_parameters',
+                    'documented_missing_classes',
+                    'percent_compliant'
+                  ]
+                  expect(data['summary'].keys - all_report_types).to eq([])
+                end
+              end
+
               it 'should have the default extra data in the report' do
                 expect(report['fqdn']).to eq(facts[:fqdn])
                 expect(report['hostname']).to eq(facts[:hostname])
                 expect(report['ipaddress']).to eq(facts[:ipaddress])
                 expect(report['puppetserver_info']).to eq(server_facts_hash.merge({'environment' => environment}))
+              end
+
+              if data[:profile_type] == 'Array'
+                it 'should have the expected custom entries' do
+                  data = report['compliance_profiles']['other_profile']['custom_entries']
+
+                  expect(data).to_not be_nil
+                  expect(data).to_not be_empty
+                  expect(data.keys).to match_array([
+                    'Class::Test1',
+                    'Class::main',
+                    'One_off_inline::one off'
+                  ])
+                  expect(data['Class::Test1'].size).to eq(2)
+                  expect(data['Class::Test1'].first['identifiers']).to eq('IN_CLASS')
+                  expect(data['Class::Test1'].last['identifiers']).to eq('IN_CLASS2')
+                  expect(data['Class::main'].size).to eq(1)
+                  expect(data['Class::main'].first['identifiers']).to eq('TOP_LEVEL')
+                  expect(data['One_off_inline::one off'].size).to eq(1)
+                  expect(data['One_off_inline::one off'].first['identifiers']).to eq('ONE_OFF')
+                end
+              else
+                it 'should not have entries from the "other_profile"' do
+                  expect(report['compliance_profiles']['other_profile']).to be_nil
+                end
               end
             end
 

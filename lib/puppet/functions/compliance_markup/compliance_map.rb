@@ -176,7 +176,27 @@ Puppet::Functions.create_function(:'compliance_markup::compliance_map') do
     required_param 'Hash', :map_data
   end
 
+  dispatch :compliance_map_inline do
+    required_param 'Variant[String[1], Array[String[1]]]', :compliance_profile
+    required_param 'Variant[String[1], Array[String[1]]]', :identifiers
+    optional_param 'String[1]', :notes
+  end
+
   def compliance_map(map_data)
+    create_compliance_map([map_data])
+  end
+
+  def compliance_map_inline(compliance_profile, identifiers, notes=nil)
+    args = [compliance_profile, identifiers]
+
+    args << notes if notes
+
+    create_compliance_map(args)
+  end
+
+  private
+
+  def create_compliance_map(args)
       #
       # Dynamic per-environment code loader.
       #
@@ -187,7 +207,6 @@ Puppet::Functions.create_function(:'compliance_markup::compliance_map') do
       # See the compliance_map.rb source code, but these may not be necessary.
       # If that functionality is removed, return this logic to being instantiated each time.
 
-    begin
     catalog = closure_scope.find_global_scope.catalog
 
     compliance_report_generator = catalog.instance_variable_get(:@simp_compliance_report_generator)
@@ -205,9 +224,9 @@ Puppet::Functions.create_function(:'compliance_markup::compliance_map') do
       compliance_report_generator = catalog.instance_variable_get(:@simp_compliance_report_generator)
     end
 
-    compliance_report_generator.compliance_map([map_data], closure_scope)
-    rescue => e
-      puts e.backtrace
-    end
+    # Get the calling scope. This probably isn't the best way to do this, but I could not find another path to what we needed
+    calling_scope = closure_scope.instance_variable_get('@class_scopes').to_a.last.last
+
+    compliance_report_generator.compliance_map(args, calling_scope)
   end
 end
