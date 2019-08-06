@@ -105,6 +105,17 @@ module Puppet::Parser::Functions
           client itself. This will ensure that PuppetDB will have a copy of the
           report for later processing.
 
+        **:client_report_timestamp**
+
+          Default: false
+
+          A Boolean which, if set, will add a ``timestamp`` field to the
+          client-side report.
+
+          This used to be enabled by default but users did not want to see
+          updates in their catalogs unless something of substance had been
+          modified.
+
         **:server_report**
 
           Default: true

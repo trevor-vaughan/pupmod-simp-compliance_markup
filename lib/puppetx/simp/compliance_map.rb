@@ -42,17 +42,18 @@ end
 
 def process_options(args)
   config = {
-    :custom_call              => false,
-    :report_types             => [
+    :custom_call               => false,
+    :report_types              => [
       'non_compliant',
       'unknown_parameters',
       'custom_entries'
     ],
-    :format                   => 'json',
-    :client_report            => false,
-    :server_report            => true,
-    :server_report_dir        => File.join(Puppet[:vardir], 'simp', 'compliance_reports'),
-    :default_map              => {},
+    :format                    => 'json',
+    :client_report             => false,
+    :client_report_timestamp   => false,
+    :server_report             => true,
+    :server_report_dir         => File.join(Puppet[:vardir], 'simp', 'compliance_reports'),
+    :default_map               => {},
     :catalog_to_compliance_map => false
   }
 
@@ -196,6 +197,10 @@ def add_file_to_client(config, compliance_map)
       compliance_resource.set_parameter('owner',Process.uid)
       compliance_resource.set_parameter('group',Process.gid)
       compliance_resource.set_parameter('mode','0600')
+    end
+
+    unless (config[:client_report_timestamp].nil? || config[:client_report_timestamp])
+      compliance_map.delete('timestamp') if compliance_map['timestamp']
     end
 
     if config[:format] == 'json'
