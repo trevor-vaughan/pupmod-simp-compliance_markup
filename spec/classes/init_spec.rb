@@ -98,7 +98,7 @@ describe 'compliance_markup' do
                 }
 
                 let(:params){
-                  _params = @default_params.dup
+                  _params = Marshal.load(Marshal.dump(@default_params))
                   _params['options']['catalog_to_compliance_map'] = true
                   _params
                 }
@@ -352,16 +352,28 @@ describe 'compliance_markup' do
               let(:hieradata) { 'passing_checks' }
 
               let(:params) {
-                _params = @default_params.dup
+                _params = Marshal.load(Marshal.dump(@default_params))
 
                 _params['options'].merge!(
                   {
                     'client_report' => true,
-                    'report_types'  => 'full'
+                    'report_types'  => ['full']
                   }
                 )
 
                 _params
+              }
+
+              let(:client_report) {
+                report_content = compliance_file_resource[:content]
+
+                if report_format == 'yaml'
+                  @report ||= YAML.load(report_content)
+                elsif report_format == 'json'
+                  @report ||= JSON.load(report_content)
+                end
+
+                @report
               }
 
               it { is_expected.to(create_class('compliance_markup')) }
@@ -371,16 +383,35 @@ describe 'compliance_markup' do
               end
 
               it "should have a valid #{report_format} report" do
-                file = nil;
-                if report_format == 'yaml'
-                  file = YAML.load(compliance_file_resource[:content]);
-                elsif report_format == 'json'
-                  file = JSON.load(compliance_file_resource[:content]);
-                else
-                  fail("Invalid report type '#{report_format}' specified")
+                expect(client_report['version']).to eq(report_version)
+              end
+
+              it 'should NOT have a timestamp' do
+                expect(client_report['timestamp']).to be_nil
+              end
+
+              context 'with client_report_timestamp = true' do
+                let(:params) {
+                  _params = Marshal.load(Marshal.dump(@default_params))
+
+                  _params['options'].merge!(
+                    {
+                      'client_report'           => true,
+                      'client_report_timestamp' => true,
+                      'report_types'            => ['full']
+                    }
+                  )
+
+                  _params
+                }
+
+                it "should have a valid #{report_format} report" do
+                  expect(client_report['version']).to eq(report_version)
                 end
-                version = file['version'];
-                expect(version).to eq(report_version)
+
+                it 'should have a timestamp' do
+                  expect(client_report['timestamp']).to_not be_nil
+                end
               end
             end
 
@@ -388,11 +419,11 @@ describe 'compliance_markup' do
               let(:hieradata) { 'passing_checks' }
 
               let(:params) {
-                _params = @default_params.dup
+                _params = Marshal.load(Marshal.dump(@default_params))
 
                 _params['options'].merge!(
                   {
-                    'report_types' => 'full'
+                    'report_types' => ['full']
                   }
                 )
 
@@ -408,6 +439,10 @@ describe 'compliance_markup' do
 
               it 'should have a valid version number' do
                 expect( report['version'] ).to eq(report_version)
+              end
+
+              it 'should have a timestamp' do
+                expect( report['timestamp'] ).to_not be_nil
               end
 
               it 'should have a valid compliance profile' do
@@ -585,12 +620,12 @@ describe 'compliance_markup' do
               }
 
               let(:params) {
-                _params = @default_params.dup
+                _params = Marshal.load(Marshal.dump(@default_params))
 
                 _params['options'].merge!(
                   {
                     'client_report' => true,
-                    'report_types'  => 'full'
+                    'report_types'  => ['full']
                   }
                 )
 
