@@ -1,4 +1,8 @@
-* Mon Jul 29 2019 Trevor Vaughan <tvaughan@onyxpoint.com> - 3.0.0-0
+* Wed Aug 09 2019 Trevor Vaughan <tvaughan@onyxpoint.com> - 3.0.0-0
+- Converted the `compliance_map` function to a Puppet 4 function called
+  `compliance_markup::compliance_map()`
+- The old puppet 3 function is deprecated and will be removed in the 3.1.0-0
+  release of this module
 - Make the 'timestamp' in the client-side report optional to prevent puppet
   from triggering file resource changes every time
 - Remove the experimental v1 data since it is no longer used
