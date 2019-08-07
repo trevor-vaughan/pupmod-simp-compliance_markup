@@ -1,4 +1,4 @@
-# The compliance markup helper class
+# @summary The compliance markup helper class
 #
 # This class should be included *after* all other classes in your site so that
 # the mapper can properly analyze the standing catalog.
@@ -17,7 +17,7 @@
 #   * full               => Include all report types*
 #   * non_compliant      => Report on non-compliant parameters*
 #   * unknown_parameters => Report on parameters that are mapped but not included in the catalog*
-#   * custom_entries     => Report custom calls to compliance_map() from the codebase
+#   * custom_entries     => Report custom calls to compliance_markup::compliance_map() from the codebase
 #   * compliant          => Report on compliant parameters
 #   * unknown_resources  => Report on classes that are mapped but not included in the catalog
 #
@@ -52,7 +52,7 @@
 #     is simply processed with ``to_yaml``
 #
 # @param options
-#   The options to pass directly to the `compliance_map` validation function
+#   The options to pass directly to the `compliance_markup::compliance_map` validation function
 #
 #   * If specified, various other options may be ignored
 class compliance_markup (

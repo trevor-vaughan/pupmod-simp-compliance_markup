@@ -96,8 +96,10 @@ def process_options(args)
         raise Puppet::ParseError, "compliance_map(): Second parameter must be a compliance identifier String"
       end
 
-      unless config[:custom][:notes].is_a?(String)
-        raise Puppet::ParseError, "compliance_map(): Third parameter must be a compliance notes String"
+      if config[:custom][:notes]
+        unless config[:custom][:notes].is_a?(String)
+          raise Puppet::ParseError, "compliance_map(): Third parameter must be a compliance notes String"
+        end
       end
     end
   end
@@ -411,7 +413,9 @@ def add_custom_entries(main_config)
     @custom_entries[profile][resource_name] = []
   end
 
-  @custom_entries[profile][resource_name] << value
+  unless @custom_entries[profile][resource_name].include?(value)
+    @custom_entries[profile][resource_name] << value
+  end
 end
 
 def custom_call_file_info
