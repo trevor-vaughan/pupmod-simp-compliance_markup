@@ -45,7 +45,7 @@ def enforcement(key, options = {"mode" => "value"}, &block)
       throw :no_such_key
     when "compliance_markup::percent_sign"
       throw :no_such_key
-    else
+  else
       retval = :notfound
       if cache_has_key("lock")
         lock = cached_value("lock")
@@ -80,10 +80,11 @@ def enforcement(key, options = {"mode" => "value"}, &block)
               end
 
               cache("debug_output_#{profile}", debug_output)
-              cache("compliance_map_#{profile}", profile_map)
 
               compile_end_time = Time.now
 
+              profile_map["compliance_markup::debug::hiera_backend_compile_time"] = (compile_end_time - compile_start_time)
+              cache("compliance_map_#{profile}", profile_map)
               debug("debug: compiled compliance_map containing #{profile_map.size} keys in #{compile_end_time - compile_start_time} seconds")
             end
             if key == "compliance_markup::debug::dump"
@@ -240,7 +241,7 @@ def compiler_class()
         end
       end
 
-      @v2 = v2_compiler.new()
+      @v2 = v2_compiler.new(callback)
 
       @compliance_data.each do |filename, map|
         if map.key?("version")
@@ -271,7 +272,7 @@ def compiler_class()
 
     def v2_compiler()
       Class.new do
-        def initialize()
+        def initialize(callback)
           @control_list = {}
           @configuration_element_list = {}
           @check_list = {}
@@ -282,8 +283,11 @@ def compiler_class()
               "controls" => {},
               "checks" => {},
           }
+          @callback = callback
         end
-
+        def callback
+          @callback
+        end
         def ce
           @configuration_element_list
         end
@@ -380,7 +384,6 @@ def compiler_class()
 
                 if (specification["type"] == "puppet") || (specification["type"] == "puppet-class-parameter")
                   contain = false
-
                   if info.key?("checks")
                     if info["checks"].key?(check)
                       if info["checks"][check] == true
@@ -391,7 +394,27 @@ def compiler_class()
                       end
                     end
                   end
-
+                  # Check confinement, if we don't match any confinement die early.
+                  if specification.key?("confine")
+                    confine = specification["confine"]
+                    if confine != {}
+                      continue = confine.all? do |confinement_setting, confinement_value|
+                        case confinement_setting
+                        when "module_name"
+                          @callback.module_list.map { |obj| obj["name"] }.include?(confinement_value)
+                        when "module_version"
+                          require 'semantic_puppet'
+                          rvalue = @callback.module_list.select { |obj| obj["name"] == confine["module_name"] }
+                          currentver = SemanticPuppet::Version.parse(rvalue.first["version"])
+                          requiredver = SemanticPuppet::VersionRange.parse(confinement_value)
+                          requiredver.include?(currentver)
+                        else
+                          rvalue = @callback.lookup_fact(confinement_setting)
+                          rvalue == confinement_value
+                        end
+                      end
+                    end
+                  end
                   if continue
                     if specification.key?("controls")
 
