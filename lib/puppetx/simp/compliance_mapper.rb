@@ -374,135 +374,181 @@ def compiler_class()
         def list_puppet_params(profile_list)
           retval = {}
 
+          # Potential matches prior to confinement
+          specifications = []
+
           profile_list.reverse.each do |profile|
-            if @profile_list.key?(profile)
-              info = @profile_list[profile]
+            unless @profile_list.key?(profile)
+              @callback.debug(%{SKIP: Profile '#{profile}' not in '#{@profile_list.keys.join("', '")}'})
+              next
+            end
 
-              @check_list.each do |check, spec|
-                specification = Marshal.load(Marshal.dump(spec))
-                continue = true
+            info = @profile_list[profile]
 
-                if (specification["type"] == "puppet") || (specification["type"] == "puppet-class-parameter")
-                  contain = false
-                  if info.key?("checks")
-                    if info["checks"].key?(check)
-                      if info["checks"][check] == true
-                        contain = true
-                      else
-                        contain = false
-                        continue = false
-                      end
-                    end
+            @check_list.each do |check, spec|
+              specification = Marshal.load(Marshal.dump(spec))
+
+              # Skip unless this item applies to puppet
+              unless (specification['type'] == 'puppet') || (specification['type'] == 'puppet-class-parameter')
+                @callback.debug("SKIP: '#{check}' is not a puppet paramter")
+                next
+              end
+
+              # Skip unless we actually have a parameter setting
+              unless specification.key?('settings')
+                @callback.debug("SKIP: '#{check}' does not have any settings")
+                next
+              end
+
+              unless specification['settings'].key?('parameter')
+                @callback.debug("SKIP: '#{check}' does not have a parameter specified")
+                next
+              end
+
+              # A parameter with a setting but without a value is invalid
+              unless specification['settings'].key?('value')
+                if specification['telemetry'] && specification['telemetry'].first
+                  location = specification['telemetry'].first['filename']
+                end
+
+                location ||= 'unknown'
+
+                raise "'#{check}' has parameter '#{specification['settings']['parameter']}' in '#{location}' but has no assigned value"
+              end
+
+              found_control_match = false
+              if specification.key?('controls')
+                specification['controls'].each do |control, subsection|
+                  if info.key?('controls') && info['controls'].include?(control) && (info['controls'][control] == true)
+                    specifications << specification
+                    found_control_match = true
                   end
-                  # Check confinement, if we don't match any confinement die early.
-                  if specification.key?("confine")
-                    confine = specification["confine"]
-                    if confine != {}
-                      continue = confine.all? do |confinement_setting, confinement_value|
-                        case confinement_setting
-                        when "module_name"
-                          @callback.module_list.map { |obj| obj["name"] }.include?(confinement_value)
-                        when "module_version"
-                          require 'semantic_puppet'
-                          rvalue = @callback.module_list.select { |obj| obj["name"] == confine["module_name"] }
-                          currentver = SemanticPuppet::Version.parse(rvalue.first["version"])
-                          requiredver = SemanticPuppet::VersionRange.parse(confinement_value)
-                          requiredver.include?(currentver)
-                        else
-                          rvalue = @callback.lookup_fact(confinement_setting)
-                          rvalue == confinement_value
-                        end
-                      end
-                    end
-                  end
-                  if continue
-                    if specification.key?("controls")
+                end
+              end
 
-                      specification["controls"].each do |control, subsection|
-                        if info.key?("controls")
-                          if info["controls"].include?(control)
-                            if info["controls"][control] == true
-                              contain = true
-                            else
-                              contain = false
-                            end
-                          end
-                        end
-
-                      end
-                    end
-                    if specification.key?("ces")
-
-                      specification["ces"].each do |ce|
-                        if (info.key?("ces"))
-                          if (info["ces"].key?(ce))
-                            if (info["ces"][ce] == true)
-                              contain = true
-                            else
-                              contain = false
-                              continue = false
-                            end
-                          end
-                        end
-
-                        if @configuration_element_list.key?(ce)
-                          if @configuration_element_list[ce].key?("controls")
-                            controls = @configuration_element_list[ce]["controls"]
-                            controls.each do |control, subsection|
-
-                              if continue == true
-                                if info.key?("controls")
-                                  if info["controls"].include?(control)
-                                    contain = true
-                                  end
-                                end
-                              end
-                            end
-                          end
-                        end
-                      end
-                    end
-                  end
-                  if contain == true
-                    if specification.key?("settings")
-                      if specification["settings"].key?("parameter")
-
-                        parameter = specification["settings"]["parameter"]
-
-                        if retval.key?(parameter)
-                          #
-                          # Merge
-                          # XXX ToDo: Need merge settings support
-                          current = retval[parameter]
-
-                          specification["settings"].each do |key, value|
-                            unless key == "parameter"
-                              case current[key].class.to_s
-                                when "Array"
-                                  current[key] = (current[key] + Array(value)).uniq
-                                when "Hash"
-                                  current[key].merge!(value)
-                                else
-                                  current[key] = Marshal.load(Marshal.dump(value))
-                              end
-                            end
-                          end
-
-                          current["telemetry"] = current["telemetry"] + specification["telemetry"]
-                        else
-                          retval[parameter] = specification["settings"].merge(specification)
+              if specification.key?('ces')
+                specification['ces'].each do |ce|
+                  if (info.key?('ces')) && (info['ces'].key?(ce)) && (info['ces'][ce] == true)
+                    specifications << specification
+                    found_control_match = true
+                  elsif @configuration_element_list.key?(ce)
+                    if @configuration_element_list[ce].key?('controls')
+                      @configuration_element_list[ce]['controls'].each do |control, subsection|
+                        if info.key?('controls') && info["controls"].include?(control)
+                          specifications << specification
+                          found_control_match = true
                         end
                       end
                     end
                   end
                 end
               end
+
+              # Skip if we didn't find any controls to match against
+              unless found_control_match
+                @callback.debug("SKIP: '#{check}' had no matching controls")
+                next
+              end
             end
           end
-          retval
-        end
-      end
-    end
+
+          # Now that all potential matches have been collected, we need to
+          # apply the confinement
+          specifications.delete_if do |specification|
+            delete_item = false
+
+            catch(:confine_end) do
+              if specification.key?('confine')
+                confine = specification['confine']
+
+                if confine
+                  unless confine.is_a?(Hash)
+
+                    unless specification['settings'].key?('value')
+                      if specification['telemetry'] && specification['telemetry'].first
+                        location = specification['telemetry'].first['filename']
+                      end
+
+                      location ||= 'unknown'
+
+                      raise "'confine' must be a Hash in check '#{check}' in '#{location}'"
+                    end
+                  end
+
+                  confine.each do |confinement_setting, confinement_value|
+                    if confinement_setting == 'module_name'
+                      unless @callback.module_list.map { |obj| obj['name'] }.include?(confinement_value)
+                        delete_item = true
+                        throw :confine_end
+                      end
+
+                      if confine['module_version']
+                        require 'semantic_puppet'
+                        known_module = @callback.module_list.select { |obj| obj['name'] == confinement_setting }
+
+                        currentver = SemanticPuppet::Version.parse(known_module.first['version'])
+                        requiredver = SemanticPuppet::VersionRange.parse(confine['module_version'])
+
+                        unless requiredver.include?(currentver)
+                          delete_item = true
+                          throw :confine_end
+                        end
+                      end
+                    end
+
+                    fact_value = @callback.lookup_fact(confinement_setting)
+                    unless fact_value == confinement_value
+                      delete_item = true
+                      throw :confine_end
+                    end
+                  end
+                end
+              end
+            end
+
+            delete_item
+          end
+
+          # If we didn't find anything, we can just bail
+          return retval if specifications.empty?
+
+          if specifications.count > 1
+            @callback.debug("WARN: Multiple valid specifications found for #{specifications.first['settings']['parameter']}, they will be merged in the order that they were defined")
+          end
+
+          specifications.each do |specification|
+            parameter = specification['settings']['parameter']
+
+            # Process all entries that have passed the confinement checks and
+            # return the appropriate match
+            if retval.key?(parameter)
+              # Merge
+              # XXX ToDo: Need merge settings support
+              current = retval[parameter]
+
+              specification['settings'].each do |key, value|
+                unless key == 'parameter'
+                  case current[key].class.to_s
+                  when 'Array'
+                    current[key] = (current[key] + Array(value)).uniq
+                  when 'Hash'
+                    current[key].merge!(value)
+                  else
+                    current[key] = Marshal.load(Marshal.dump(value))
+                  end
+                end
+              end
+
+              current['telemetry'] = current['telemetry'] + specification['telemetry']
+            else
+              retval[parameter] = specification['settings'].merge(specification)
+            end
+          end
+
+          return retval
+        end # list_puppet_params()
+      end # Class.new
+    end # v2_compiler()
 
     def control_list()
       Class.new do
