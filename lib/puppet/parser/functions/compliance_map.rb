@@ -196,7 +196,7 @@ module Puppet::Parser::Functions
       # See the compliance_map.rb source code, but these may not be necessary.
       # If that functionality is removed, return this logic to being instantiated each time.
 
-      function_simplib_deprecation(['compliance_map', 'compliance_map is deprecated and will be removed in a future release. Please use compliance_markup::compliance_map()'])
+      call_function('simplib::deprecation', ['compliance_map', 'compliance_map is deprecated and will be removed in a future release. Please use compliance_markup::compliance_map()'])
 
       catalog = find_global_scope.catalog
 
