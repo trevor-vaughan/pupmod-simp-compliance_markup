@@ -2,6 +2,7 @@
 - Update confinement logic to ensure that all possibilities are collected
 - Add debugging logs to enforcement logic
 - Raise errors on malformed data
+- Increase supported simp/simplib version to < 5
 
 * Mon Aug 12 2019 Robert Vincent <pillarsdotnet@gmail.com> - 3.0.2-0
 - Support puppetlabs/stdlib 6.x.
