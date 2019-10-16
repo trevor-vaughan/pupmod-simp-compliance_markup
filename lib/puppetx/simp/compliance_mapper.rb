@@ -390,7 +390,7 @@ def compiler_class()
 
               # Skip unless this item applies to puppet
               unless (specification['type'] == 'puppet') || (specification['type'] == 'puppet-class-parameter')
-                @callback.debug("SKIP: '#{check}' is not a puppet paramter")
+                @callback.debug("SKIP: '#{check}' is not a puppet parameter")
                 next
               end
 
