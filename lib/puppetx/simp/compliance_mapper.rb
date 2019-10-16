@@ -407,11 +407,11 @@ def compiler_class()
 
               # A parameter with a setting but without a value is invalid
               unless specification['settings'].key?('value')
+                location = 'unknown'
+
                 if specification['telemetry'] && specification['telemetry'].first
                   location = specification['telemetry'].first['filename']
                 end
-
-                location ||= 'unknown'
 
                 raise "'#{check}' has parameter '#{specification['settings']['parameter']}' in '#{location}' but has no assigned value"
               end
@@ -465,11 +465,11 @@ def compiler_class()
                   unless confine.is_a?(Hash)
 
                     unless specification['settings'].key?('value')
+                      location = 'unknown'
+
                       if specification['telemetry'] && specification['telemetry'].first
                         location = specification['telemetry'].first['filename']
                       end
-
-                      location ||= 'unknown'
 
                       raise "'confine' must be a Hash in check '#{check}' in '#{location}'"
                     end
