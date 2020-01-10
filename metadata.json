@@ -1,6 +1,6 @@
 {
   "name": "simp-compliance_markup",
-  "version": "3.0.2",
+  "version": "3.1.0",
   "author": "SIMP Team",
   "summary": "Compliance-mapping annotation for Puppet code",
   "license": "Apache-2.0",
@@ -28,21 +28,24 @@
       "operatingsystem": "CentOS",
       "operatingsystemrelease": [
         "6",
-        "7"
+        "7",
+        "8"
       ]
     },
     {
       "operatingsystem": "RedHat",
       "operatingsystemrelease": [
         "6",
-        "7"
+        "7",
+        "8"
       ]
     },
     {
       "operatingsystem": "OracleLinux",
       "operatingsystemrelease": [
         "6",
-        "7"
+        "7",
+        "8"
       ]
     }
   ],

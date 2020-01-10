@@ -14,7 +14,7 @@
 **Functions**
 
 * [`compliance_map`](#compliance_map): DEPRECATED: Use compliance_markup::compliance_map()
-* [`compliance_markup::compliance_map`](#compliance_markupcompliance_map): This function provides a mechanism for mapping compliance data to settings in Puppet.
+* [`compliance_markup::compliance_map`](#compliance_markupcompliance_map): Provides a mechanism for mapping compliance data to settings in Puppet
 * [`compliance_markup::enforcement`](#compliance_markupenforcement): 
 * [`compliance_markup::loaded_maps`](#compliance_markuploaded_maps): 
 * [`compliance_markup::telemetry`](#compliance_markuptelemetry): 
@@ -273,6 +273,17 @@ The following options are supported:
     client itself. This will ensure that PuppetDB will have a copy of the
     report for later processing.
 
+  **:client_report_timestamp**
+
+    Default: false
+
+    A Boolean which, if set, will add a ``timestamp`` field to the
+    client-side report.
+
+    This used to be enabled by default but users did not want to see
+    updates in their catalogs unless something of substance had been
+    modified.
+
   **:server_report**
 
     Default: true
@@ -446,6 +457,17 @@ The following options are supported:
     A Boolean which, if set, will place a copy of the report on the
     client itself. This will ensure that PuppetDB will have a copy of the
     report for later processing.
+
+  **:client_report_timestamp**
+
+    Default: false
+
+    A Boolean which, if set, will add a ``timestamp`` field to the
+    client-side report.
+
+    This used to be enabled by default but users did not want to see
+    updates in their catalogs unless something of substance had been
+    modified.
 
   **:server_report**
 
@@ -754,6 +776,30 @@ Data type: `Hash`
 ##### `context`
 
 Data type: `Puppet::LookupContext`
+
+
+
+#### `compliance_markup::enforcement(String $key, Hash $options, Undef $context)`
+
+The compliance_markup::enforcement function.
+
+Returns: `Any`
+
+##### `key`
+
+Data type: `String`
+
+
+
+##### `options`
+
+Data type: `Hash`
+
+
+
+##### `context`
+
+Data type: `Undef`
 
 
 

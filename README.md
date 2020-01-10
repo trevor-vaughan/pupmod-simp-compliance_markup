@@ -47,6 +47,8 @@ provide custom inline policy documentation and mapping documentation.
 The goal of this module is to make it easier for users to both detect, and
 report on, deviations from a given policy inside their Puppet codebase.
 
+See [REFERENCE.md](./REFERENCE.md) for more information.
+
 ## Module Description
 
 This module provides the function `compliance_markup::compliance_map()` and a
