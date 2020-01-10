@@ -9,7 +9,7 @@ HOSTS:
   el7-compliance-map:
     roles:
       - server
-      - primary
+      - default
     platform: el-7-x86_64
     hypervisor: docker
     image: centos:7
@@ -21,7 +21,7 @@ HOSTS:
 
   el6-compliance-map:
     roles:
-      - secondary
+      - client
     platform: el-6-x86_64
     hypervisor: docker
     image: centos:6
@@ -33,8 +33,7 @@ HOSTS:
 
   el8-compliance-map:
     roles:
-      - server
-      - primary
+      - client
     platform: el-8-x86_64
     hypervisor: docker
     image: centos:8
@@ -42,7 +41,7 @@ HOSTS:
     docker_preserve_image: true
     docker_image_commands:
       # Puppet Deps
-      - 'yum install -y ntpdate rsync openssl openssh-server'
+      - 'yum install -y rsync openssl openssh-server'
 CONFIG:
   log_level: verbose
   type: aio
