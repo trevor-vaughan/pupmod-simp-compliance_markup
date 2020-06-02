@@ -98,6 +98,10 @@ Puppet::Functions.create_function(:'compliance_markup::enforcement') do
     'compliance_markup::enforcement'
   end
 
+  def environment()
+    closure_scope.environment.name.to_s
+  end
+
   def not_found()
     @context.not_found
   end
