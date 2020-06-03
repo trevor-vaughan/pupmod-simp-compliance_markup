@@ -21,6 +21,7 @@ describe 'compliance_markup' do
               'format'            => 'yaml'
             }
           }
+
           is_expected.to(compile.with_all_deps)
         end
 
@@ -169,19 +170,19 @@ describe 'compliance_markup' do
                 }
 
                 define one_off_inline {
-                  compliance_map('other_profile', 'ONE_OFF', 'This is awesome')
+                  compliance_markup::compliance_map('other_profile', 'ONE_OFF', 'This is awesome')
 
                   notify { $name: }
                 }
 
-                include '::test1'
-                include '::test2::test3'
+                include 'test1'
+                include 'test2::test3'
 
                 testdef1 { 'test_definition': }
                 testdef2 { 'test_definition': defarg1_2 => 'test_bad' }
                 one_off_inline { 'one off': }
 
-                compliance_map('other_profile', 'TOP_LEVEL', 'Top level call')
+                compliance_markup::compliance_map('other_profile', 'TOP_LEVEL', 'Top level call')
               EOM
             }
           when 'String'
@@ -218,7 +219,7 @@ describe 'compliance_markup' do
                 }
 
                 define one_off_inline {
-                  compliance_map('other_profile', 'ONE_OFF', 'This is awesome')
+                  compliance_markup::compliance_map('other_profile', 'ONE_OFF', 'This is awesome')
 
                   notify { $name: }
                 }
@@ -230,7 +231,7 @@ describe 'compliance_markup' do
                 testdef2 { 'test_definition': defarg1_2 => 'test_bad' }
                 one_off_inline { 'one off': }
 
-                compliance_map('other_profile', 'TOP_LEVEL', 'Top level call')
+                compliance_markup::compliance_map('other_profile', 'TOP_LEVEL', 'Top level call')
               EOM
             }
         end
@@ -281,7 +282,19 @@ describe 'compliance_markup' do
             }
 
             context 'in a default run' do
-              let(:hieradata) { 'passing_checks' }
+              before(:all) do
+                ENV['HIERA_compliance_data_dir'] = File.expand_path(
+                  File.join(
+                    fixtures,
+                    'hieradata',
+                    'passing_checks'
+                  )
+                )
+              end
+
+              after(:all) do
+                ENV['HIERA_compliance_data_dir'] = nil
+              end
 
               let(:params) { @default_params }
 
@@ -349,7 +362,19 @@ describe 'compliance_markup' do
             end
 
             context 'when placing the report on the client' do
-              let(:hieradata) { 'passing_checks' }
+              before(:all) do
+                ENV['HIERA_compliance_data_dir'] = File.expand_path(
+                  File.join(
+                    fixtures,
+                    'hieradata',
+                    'passing_checks'
+                  )
+                )
+              end
+
+              after(:all) do
+                ENV['HIERA_compliance_data_dir'] = nil
+              end
 
               let(:params) {
                 _params = Marshal.load(Marshal.dump(@default_params))
@@ -416,7 +441,19 @@ describe 'compliance_markup' do
             end
 
             context 'when checking system compliance' do
-              let(:hieradata) { 'passing_checks' }
+              before(:all) do
+                ENV['HIERA_compliance_data_dir'] = File.expand_path(
+                  File.join(
+                    fixtures,
+                    'hieradata',
+                    'passing_checks'
+                  )
+                )
+              end
+
+              after(:all) do
+                ENV['HIERA_compliance_data_dir'] = nil
+              end
 
               let(:params) {
                 _params = Marshal.load(Marshal.dump(@default_params))
@@ -562,7 +599,19 @@ describe 'compliance_markup' do
             end
 
             context 'when running with the default options' do
-              let(:hieradata) { 'passing_checks' }
+              before(:all) do
+                ENV['HIERA_compliance_data_dir'] = File.expand_path(
+                  File.join(
+                    fixtures,
+                    'hieradata',
+                    'passing_checks'
+                  )
+                )
+              end
+
+              after(:all) do
+                ENV['HIERA_compliance_data_dir'] = nil
+              end
 
               let(:params) { @default_params }
 
@@ -609,7 +658,19 @@ describe 'compliance_markup' do
             end
 
             context 'when an option in test1 has deviated' do
-              let(:hieradata) { 'test1_deviation' }
+              before(:all) do
+                ENV['HIERA_compliance_data_dir'] = File.expand_path(
+                  File.join(
+                    fixtures,
+                    'hieradata',
+                    'test1_deviation'
+                  )
+                )
+              end
+
+              after(:all) do
+                ENV['HIERA_compliance_data_dir'] = nil
+              end
 
               let(:params) { @default_params }
 
@@ -660,7 +721,19 @@ describe 'compliance_markup' do
             end
 
             context 'when an option in test2::test3 has deviated' do
-              let(:hieradata) { 'test2_3_deviation' }
+              before(:all) do
+                ENV['HIERA_compliance_data_dir'] = File.expand_path(
+                  File.join(
+                    fixtures,
+                    'hieradata',
+                    'test2_3_deviation'
+                  )
+                )
+              end
+
+              after(:all) do
+                ENV['HIERA_compliance_data_dir'] = nil
+              end
 
               let(:params) { @default_params }
 
@@ -690,7 +763,19 @@ describe 'compliance_markup' do
                 EOM
               }
 
-              let(:hieradata) { 'passing_checks' }
+              before(:all) do
+                ENV['HIERA_compliance_data_dir'] = File.expand_path(
+                  File.join(
+                    fixtures,
+                    'hieradata',
+                    'passing_checks'
+                  )
+                )
+              end
+
+              after(:all) do
+                ENV['HIERA_compliance_data_dir'] = nil
+              end
 
               it { is_expected.to(compile.with_all_deps) }
             end
@@ -702,7 +787,19 @@ describe 'compliance_markup' do
                 EOM
               }
 
-              let(:hieradata) { 'passing_checks' }
+              before(:all) do
+                ENV['HIERA_compliance_data_dir'] = File.expand_path(
+                  File.join(
+                    fixtures,
+                    'hieradata',
+                    'passing_checks'
+                  )
+                )
+              end
+
+              after(:all) do
+                ENV['HIERA_compliance_data_dir'] = nil
+              end
 
               it { is_expected.to(compile.with_all_deps) }
             end
@@ -714,7 +811,20 @@ describe 'compliance_markup' do
                 EOM
               }
 
-              let(:hieradata) { 'undefined_values' }
+              before(:all) do
+                ENV['HIERA_compliance_data_dir'] = File.expand_path(
+                  File.join(
+                    fixtures,
+                    'hieradata',
+                    'undefined_values'
+                  )
+                )
+              end
+
+              after(:all) do
+                ENV['HIERA_compliance_data_dir'] = nil
+              end
+
 
               it { is_expected.to(compile.with_all_deps) }
             end

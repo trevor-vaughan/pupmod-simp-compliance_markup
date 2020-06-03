@@ -8,8 +8,7 @@
 #   lookup(key, { "default_value" => default})
 # end
 #
-# The block is used to abstract lookup() since Hiera v5 and Hiera v3 have
-# different calling conventions
+# The block is used to abstract lookup()
 #
 # This block will also return a KeyError if there is no key found, which must be
 # trapped and converted into the correct response for the api. either throw :no_such_key
@@ -22,144 +21,125 @@
 # cache(key, value)
 # cache_has_key(key)
 #
-# which allow for debug logging, and caching, respectively. Hiera v5 provides this function
-# natively, while Hiera v3 has to create it itself
-
+# which allow for debug logging, and caching, respectively.
 
 def enforcement(key, context=self, options={"mode" => "value"}, &block)
+
+  options['mode'] ||= 'value'
+
   # Throw away keys we know we can't handle.
   # This also prevents recursion since these are the only keys internally we call.
-  case key
-    when "lookup_options"
-      # XXX ToDo See note about compiling a lookup_options hash in the compiler
-      throw :no_such_key
-    when "compliance_map"
-      throw :no_such_key
-    when "compliance_markup::compliance_map"
-      throw :no_such_key
-    when "compliance_markup::compliance_map::percent_sign"
-      throw :no_such_key
-    when "compliance_markup::enforcement"
-      throw :no_such_key
-    when "compliance_markup::version"
-      throw :no_such_key
-    when "compliance_markup::percent_sign"
-      throw :no_such_key
-    else
-      retval = :notfound
+  throw :no_such_key if [
+      'lookup_options',
+      'compliance_map',
+      'compliance_markup::compliance_map::percent_sign',
+      'compliance_markup::enforcement',
+      'compliance_markup::version',
+      'compliance_markup::percent_sign'
+  ].include?(key)
 
-      if context.cache_has_key("lock")
-        lock = context.cached_value("lock")
-      else
-        lock = false
-      end
+  retval = :notfound
 
-      if lock == false
+  lock = false
+  lock = context.cached_value("lock") if context.cache_has_key("lock")
 
-        debug_output = {}
+  unless lock
+    debug_output = {}
 
-        context.cache("lock", true)
+    context.cache("lock", true)
 
-        begin
-          profile_list = cached_lookup "compliance_markup::enforcement", [], &block
+    begin
+      profile_list = cached_lookup("compliance_markup::enforcement", [], &block)
 
-          unless (profile_list == [])
-            debug("debug: compliance_markup::enforcement set to #{profile_list}, attempting to enforce")
+      unless profile_list == []
+        debug("debug: compliance_markup::enforcement set to #{profile_list}, attempting to enforce")
 
-            profile = profile_list.hash.to_s
+        profile = profile_list.hash.to_s
 
-            if context.cache_has_key("compliance_map_#{profile}")
-              # If we have a cache for this profile, we've already found
-              # everything that we're going to find.
-              if context.cache_has_key(key)
-                return cached_value(key)
-              else
-                throw :no_such_key
+        if context.cache_has_key("compliance_map_#{profile}")
+          # If we have a cache for this profile, we've already found
+          # everything that we're going to find.
+          if context.cache_has_key(key)
+            return cached_value(key)
+          else
+            throw :no_such_key
+          end
+        end
+
+        debug("debug: compliance map for #{profile_list} not found, starting compiler")
+
+        compile_start_time = Time.now
+        profile_compiler   = compiler_class.new(self)
+
+        profile_compiler.load(options, &block)
+
+        profile_map = profile_compiler.list_puppet_params(profile_list).cook do |item|
+          debug_output[item["parameter"]] = item["telemetry"]
+          item[options["mode"]]
+
+          # Add this parameter to the context cache so that it is
+          # preserved between calls.
+          #
+          # This allows us to prevent deep recursion and repeated digging
+          # into files with no benefit.
+          context.cache(item["parameter"], item["value"])
+        end
+
+        context.cache("debug_output_#{profile}", debug_output)
+        context.cache("compliance_map_#{profile}", profile_map)
+
+        compile_end_time = Time.now
+
+        profile_map["compliance_markup::debug::hiera_backend_compile_time"] = (compile_end_time - compile_start_time)
+        cache("compliance_map_#{profile}", profile_map)
+        debug("debug: compiled compliance_map containing #{profile_map.size} keys in #{compile_end_time - compile_start_time} seconds")
+
+        if key == "compliance_markup::debug::dump"
+           retval = profile_map
+        else
+          # Handle a knockout prefix
+          unless profile_map.key?("--" + key)
+            if profile_map.key?(key)
+              debug("debug: v2 details for #{key}")
+
+              retval = profile_map[key]
+              files  = {}
+
+              debug_output[key].each do |telemetryinfo|
+                unless files.key?(telemetryinfo["filename"])
+                  files[telemetryinfo["filename"]] = []
+                end
+                files[telemetryinfo["filename"]] << telemetryinfo
               end
 
-              profile_map = context.cached_value("compliance_map_#{profile}")
+              files.each do |k, v|
+                debug("     #{k}:")
 
-              # In this case, we've already loaded everything and didn't find
-              # anything at all so go ahead and bail.
-              throw :no_such_key if (profile_map && profile_map.empty?)
-            else
-              debug("debug: compliance map for #{profile_list} not found, starting compiler")
-
-              compile_start_time = Time.now
-              profile_compiler   = compiler_class.new(self)
-
-              profile_compiler.load(&block)
-
-              profile_map = profile_compiler.list_puppet_params(profile_list).cook do |item|
-                debug_output[item["parameter"]] = item["telemetry"]
-                item[options["mode"]]
-
-                # Add this parameter to the context cache so that it is
-                # preserved between calls.
-                #
-                # This allows us to prevent deep recursion and repeated digging
-                # into files with no benefit.
-                context.cache(item["parameter"], item["value"])
-              end
-
-              context.cache("debug_output_#{profile}", debug_output)
-              context.cache("compliance_map_#{profile}", profile_map)
-
-              compile_end_time = Time.now
-
-              profile_map["compliance_markup::debug::hiera_backend_compile_time"] = (compile_end_time - compile_start_time)
-              cache("compliance_map_#{profile}", profile_map)
-              debug("debug: compiled compliance_map containing #{profile_map.size} keys in #{compile_end_time - compile_start_time} seconds")
-            end
-            if key == "compliance_markup::debug::dump"
-               retval = profile_map
-            else
-              # Handle a knockout prefix
-              unless profile_map.key?("--" + key)
-                if profile_map.key?(key)
-                  debug("debug: v2 details for #{key}")
-
-                  retval = profile_map[key]
-                  files  = {}
-
-                  debug_output[key].each do |telemetryinfo|
-                    unless files.key?(telemetryinfo["filename"])
-                      files[telemetryinfo["filename"]] = []
-                    end
-                    files[telemetryinfo["filename"]] << telemetryinfo
-                  end
-
-                  files.each do |k, v|
-                    debug("     #{k}:")
-
-                    v.each do |value2|
-                      debug("             #{value2['id']}")
-                      debug("                        #{value2['value']['settings']['value']}")
-                    end
-                  end
+                v.each do |value2|
+                  debug("             #{value2['id']}")
+                  debug("                        #{value2['value']['settings']['value']}")
                 end
               end
             end
-
-            # XXX ToDo: Generate a lookup_options hash, set to 'first', if the user specifies some
-            # option that toggles it on. This would allow un-overridable enforcement at the hiera
-            # layer (though it can still be overridden by resource-style class definitions)
           end
-        rescue
-        ensure
-          context.cache("lock", false)
         end
+
+        # XXX ToDo: Generate a lookup_options hash, set to 'first', if the user specifies some
+        # option that toggles it on. This would allow un-overridable enforcement at the hiera
+        # layer (though it can still be overridden by resource-style class definitions)
       end
-      if retval == :notfound
-        throw :no_such_key
-      end
+    rescue
+      # noop
+    ensure
+      context.cache("lock", false)
+    end
   end
 
-  return retval
+  throw :no_such_key if retval == :notfound
 end
 
 # These cache functions are assumed to be created by the wrapper
-# object, either the v3 backend or v5 backend.
+# object backend.
 def cached_lookup(key, default, &block)
   if cache_has_key(key)
     retval = cached_value(key)
@@ -174,32 +154,32 @@ def compiler_class()
   Class.new do
     attr_reader :compliance_data
     attr_reader :callback
+    attr_reader :version
     attr_accessor :v2
 
     def initialize(object)
       require 'semantic_puppet'
 
       @callback = object
+
+      @version = SemanticPuppet::Version.parse('2.5.0')
     end
 
-    def load(&block)
+    def load(options={}, &block)
       @callback.debug("callback = #{callback.codebase}")
 
-      @compliance_data                                               = {}
+      module_scope_compliance_map = callback.cached_lookup "compliance_markup::compliance_map", {}, &block
+      top_scope_compliance_map    = callback.cached_lookup "compliance_map", {}, &block
 
-      module_scope_compliance_map                                    = callback.cached_lookup "compliance_markup::compliance_map", {}, &block
-      top_scope_compliance_map                                       = callback.cached_lookup "compliance_map", {}, &block
+
+      @compliance_data = {}
 
       @compliance_data["puppet://compliance_markup::compliance_map"] = (module_scope_compliance_map)
       @compliance_data["puppet://compliance_map"]                    = (top_scope_compliance_map)
 
-      moduleroot                                                     = File.expand_path('../../../../../', __FILE__)
-      rootpaths                                                      = {}
+      moduleroot = File.expand_path('../../../../../', __FILE__)
+      rootpaths  = {}
 
-      # Dynamically load v1 compliance map data from modules.
-      # Create a set of yaml files (all containing compliance info) in your modules, in
-      # lib/puppetx/compliance/module_name/v1/whatever.yaml
-      # Note: do not attempt to merge or rely on merge behavior for v1
       begin
         environmentroot            = "#{Puppet[:environmentpath]}/#{callback.environment}"
         env                        = Puppet::Settings::EnvironmentConf.load_from(environmentroot, ["/test"])
@@ -231,36 +211,35 @@ def compiler_class()
         rescue
         end
       end
-      rootpaths.each do |path, dontcare|
-        load_paths = [
-            # This path is deprecated and only exists
-            # to provide backwards compatibility
-            # with SIMP EE 6.1 and 6.2
-            "/lib/puppetx/compliance",
-            "/SIMP/compliance_profiles",
-            "/simp/compliance_profiles",
-        ]
 
-        ['yaml', 'json'].each do |type|
-          load_paths.each do |pathspec|
-            interp_pathspecs = [
-                path + "#{pathspec}/*.#{type}",
-                path + "#{pathspec}/**/*.#{type}",
-            ]
-            interp_pathspecs.each do |interp_pathspec|
-              Dir.glob(interp_pathspec) do |filename|
-                begin
-                  case type
-                    when 'yaml'
-                      @compliance_data[filename] = YAML.load(File.read(filename))
-                    when 'json'
-                      @compliance_data[filename] = JSON.parse(File.read(filename))
-                  end
-                rescue
-                  warn(%{compliance_engine: Invalid '#{type}' file found at '#{filename}'})
-                end
-              end
-            end
+      base_paths = rootpaths.keys
+
+      override_data_dirs = ENV.fetch('HIERA_compliance_data_dir', options[:data_dirs])
+      override_data_dirs = Array(override_data_dirs) if override_data_dirs.is_a?(String)
+
+      base_paths = override_data_dirs if override_data_dirs.is_a?(Array)
+      base_paths += options[:aux_paths] if (options[:aux_paths] && options[:aux_paths].is_a?(Array))
+
+      load_paths = [
+        "SIMP/compliance_profiles",
+        "simp/compliance_profiles"
+      ]
+
+      ['yaml', 'json'].each do |type|
+        # Using the power of glob for great good
+        Dir.glob(
+          File.join(
+            "{#{base_paths.join(',')}}",   # Glob against all base module paths
+              "{#{load_paths.join(',')}}", # And all intermediate load paths
+              '**',                        # And all directories underneath
+              "*.#{type}"                  # Of the given file type
+          )
+        ) do |filename|
+          begin
+            @compliance_data[filename] = YAML.load(File.read(filename)) if (type == 'yaml')
+            @compliance_data[filename] = JSON.parse(File.read(filename)) if (type == 'json')
+          rescue => e
+            warn(%{compliance_engine: Invalid '#{type}' file found at '#{filename}' => #{e}})
           end
         end
       end
@@ -331,66 +310,66 @@ def compiler_class()
         def import(filename, data)
           data.each do |key, value|
             case key
-              when "profiles"
-                value.each do |profile, map|
-                  @profile_list[profile] ||= {}
+            when "profiles"
+              value.each do |profile, map|
+                @profile_list[profile] ||= {}
 
-                  map.each do |k, v|
-                    @profile_list[profile][k] = v
-                  end
-
-                  @profile_list[profile]["telemetry"] = [{
-                    "filename" => filename,
-                    "path"     => "#{key}/#{profile}",
-                    "id"       => "#{profile}",
-                    "value"    => Marshal.load(Marshal.dump(map))
-                  }]
+                map.each do |k, v|
+                  @profile_list[profile][k] = v
                 end
-              when "controls"
-                value.each do |profile, map|
-                  @control_list[profile] ||= {}
 
-                  map.each do |k, v|
-                    @control_list[profile][k] = v
-                  end
+                @profile_list[profile]["telemetry"] = [{
+                  "filename" => filename,
+                  "path"     => "#{key}/#{profile}",
+                  "id"       => "#{profile}",
+                  "value"    => Marshal.load(Marshal.dump(map))
+                }]
+              end
+            when "controls"
+              value.each do |profile, map|
+                @control_list[profile] ||= {}
 
-                  @control_list[profile]["telemetry"] = [{
-                    "filename" => filename,
-                    "path"     => "#{key}/#{profile}",
-                    "id"       => "#{profile}",
-                    "value"    => Marshal.load(Marshal.dump(map))
-                  }]
+                map.each do |k, v|
+                  @control_list[profile][k] = v
                 end
-              when "checks"
-                value.each do |profile, map|
-                  @check_list[profile] ||= {}
 
-                  map.each do |k, v|
-                    @check_list[profile][k] = v
-                  end
+                @control_list[profile]["telemetry"] = [{
+                  "filename" => filename,
+                  "path"     => "#{key}/#{profile}",
+                  "id"       => "#{profile}",
+                  "value"    => Marshal.load(Marshal.dump(map))
+                }]
+              end
+            when "checks"
+              value.each do |profile, map|
+                @check_list[profile] ||= {}
 
-                  @check_list[profile]["telemetry"] = [{
-                    "filename" => filename,
-                    "path"     => "#{key}/#{profile}",
-                    "id"       => "#{profile}",
-                    "value"    => Marshal.load(Marshal.dump(map))
-                  }]
+                map.each do |k, v|
+                  @check_list[profile][k] = v
                 end
-              when "ce"
-                value.each do |profile, map|
-                  @configuration_element_list[profile] ||= {}
 
-                  map.each do |k, v|
-                    @configuration_element_list[profile][k] = v
-                  end
+                @check_list[profile]["telemetry"] = [{
+                  "filename" => filename,
+                  "path"     => "#{key}/#{profile}",
+                  "id"       => "#{profile}",
+                  "value"    => Marshal.load(Marshal.dump(map))
+                }]
+              end
+            when "ce"
+              value.each do |profile, map|
+                @configuration_element_list[profile] ||= {}
 
-                  @configuration_element_list[profile]["telemetry"] = [{
-                    "filename" => filename,
-                    "path"     => "#{key}/#{profile}",
-                    "id"       => "#{profile}",
-                    "value"    => Marshal.load(Marshal.dump(map))
-                  }]
+                map.each do |k, v|
+                  @configuration_element_list[profile][k] = v
                 end
+
+                @configuration_element_list[profile]["telemetry"] = [{
+                  "filename" => filename,
+                  "path"     => "#{key}/#{profile}",
+                  "id"       => "#{profile}",
+                  "value"    => Marshal.load(Marshal.dump(map))
+                }]
+              end
             end
           end
         end
@@ -598,85 +577,33 @@ def compiler_class()
           end
           nhash
         end
+
         def to_json()
           @hash.to_json
         end
+
         def to_yaml()
           @hash.to_yaml
         end
+
         def to_h()
           @hash
         end
       end
     end
 
-    # NOTE To ensure backwards compatability, we need to take steps to ensure that
-    # the v1 and v2 compilers both work without stepping on each-others' toes.
     def list_puppet_params(profile_list)
-      v1_table = {}
-      v2_table = {}
+      table = {}
 
       # Set the keys in reverse order. This means that [ 'disa', 'nist'] would prioritize
       # disa values over nist. Only bother to store the highest priority value
       profile_list.reverse.each do |profile_map|
-        # If we see no version tag, we know that this profile map must be
-        # version 1, and we run the legacy code for the v1 compiler
         unless profile_map =~ /^v[0-9]+/
-
-          @compliance_data.each do |filename, map|
-            # Assume version 1 if no version is specified.
-            # Due to old archaic code
-            version = SemanticPuppet::Version.parse('1.0.0')
-
-            if map.key?("version")
-              version = SemanticPuppet::Version.parse(map["version"])
-            end
-
-            if version.major == 1
-              v1_data = v1_parser(profile_map, map)
-
-              result = {}
-              # Convert this into what cook() is looking for
-              v1_data.each do |item, data|
-                result[item] = {
-                  'parameter' => item,
-                  'value'     => data['value'],
-                  'type'      => 'puppet',
-                  'settings'  => {
-                    'parameter' => item,
-                    'value'     => data['value']
-                  }
-                }
-              end
-
-              v1_table.merge!(result)
-            end
-          end
-
-          # v2 application
-          begin
-            v2_table = v2.list_puppet_params(profile_list)
-          rescue Exception => ex
-            raise ex
-          end
+          table = v2.list_puppet_params(profile_list)
         end
       end
-
-      table = v1_table.merge!(v2_table)
 
       control_list.new(table)
-    end
-
-    def v1_parser(profile, hashmap)
-      table = {}
-      if hashmap.key?(profile)
-        hashmap[profile].each do |key, entry|
-          if entry.key?("value")
-            table[key] = entry
-          end
-        end
-      end
-      table
     end
   end
 end

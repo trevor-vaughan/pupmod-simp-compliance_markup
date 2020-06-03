@@ -5,17 +5,5 @@ defaults:
   data_hash: yaml_data
 
 hierarchy:
-  - name: 'Versioned OS - NIST 800 53 Rev 4'
-    path: "compliance_profiles/%{facts.os.name}/%{facts.os.release.major}/nist_800_53_rev4.json"
-
-  - name: 'Versioned OS - DISA STIG'
-    path: "compliance_profiles/%{facts.os.name}/%{facts.os.release.major}/disa_stig.json"
-
-  - name: 'OS - NIST 800 53 Rev 4'
-    path: "compliance_profiles/%{facts.os.name}/nist_800_53_rev4.json"
-
-  - name: 'OS - DISA STIG'
-    path: "compliance_profiles/%{facts.os.name}/disa_stig.json"
-
   - name: 'common'
     path: 'common.yaml'
