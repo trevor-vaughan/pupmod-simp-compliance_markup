@@ -313,62 +313,31 @@ def compiler_class()
             when "profiles"
               value.each do |profile, map|
                 @profile_list[profile] ||= {}
-
-                map.each do |k, v|
-                  @profile_list[profile][k] = v
-                end
-
-                @profile_list[profile]["telemetry"] = [{
-                  "filename" => filename,
-                  "path"     => "#{key}/#{profile}",
-                  "id"       => "#{profile}",
-                  "value"    => Marshal.load(Marshal.dump(map))
-                }]
+                @profile_list[profile] = DeepMerge.deep_merge!(@profile_list[profile], map, {:knockout_prefix => '--'})
               end
             when "controls"
               value.each do |profile, map|
                 @control_list[profile] ||= {}
-
-                map.each do |k, v|
-                  @control_list[profile][k] = v
-                end
-
-                @control_list[profile]["telemetry"] = [{
-                  "filename" => filename,
-                  "path"     => "#{key}/#{profile}",
-                  "id"       => "#{profile}",
-                  "value"    => Marshal.load(Marshal.dump(map))
-                }]
+                @control_list[profile] = DeepMerge.deep_merge!(@control_list[profile], map, {:knockout_prefix => '--'})
               end
             when "checks"
               value.each do |profile, map|
                 @check_list[profile] ||= {}
+                @check_list[profile] = DeepMerge.deep_merge!(@check_list[profile], map, {:knockout_prefix => '--'})
 
-                map.each do |k, v|
-                  @check_list[profile][k] = v
-                end
+                check_telemetry = {
+                  'filename' => filename,
+                  'path'     => "#{key}/#{profile}",
+                  'id'       => "#{profile}",
+                  'value'    => Marshal.load(Marshal.dump(map))
+                }
 
-                @check_list[profile]["telemetry"] = [{
-                  "filename" => filename,
-                  "path"     => "#{key}/#{profile}",
-                  "id"       => "#{profile}",
-                  "value"    => Marshal.load(Marshal.dump(map))
-                }]
+                @check_list[profile]['telemetry'] = [check_telemetry]
               end
             when "ce"
               value.each do |profile, map|
                 @configuration_element_list[profile] ||= {}
-
-                map.each do |k, v|
-                  @configuration_element_list[profile][k] = v
-                end
-
-                @configuration_element_list[profile]["telemetry"] = [{
-                  "filename" => filename,
-                  "path"     => "#{key}/#{profile}",
-                  "id"       => "#{profile}",
-                  "value"    => Marshal.load(Marshal.dump(map))
-                }]
+                @configuration_element_list[profile] = DeepMerge.deep_merge!(@configuration_element_list[profile], map, {:knockout_prefix => '--'})
               end
             end
           end
@@ -419,12 +388,16 @@ def compiler_class()
                 raise "'#{check}' has parameter '#{specification['settings']['parameter']}' in '#{location}' but has no assigned value"
               end
 
-              found_control_match = false
+              if info.key?('checks') && info['checks'].include?(check) && (info['checks'][check] == true)
+                specifications << specification
+                next
+              end
+
               if specification.key?('controls')
                 specification['controls'].each do |control, subsection|
                   if info.key?('controls') && info['controls'].include?(control) && (info['controls'][control] == true)
                     specifications << specification
-                    found_control_match = true
+                    next
                   end
                 end
               end
@@ -433,13 +406,13 @@ def compiler_class()
                 specification['ces'].each do |ce|
                   if (info.key?('ces')) && (info['ces'].key?(ce)) && (info['ces'][ce] == true)
                     specifications << specification
-                    found_control_match = true
+                    next
                   elsif @configuration_element_list.key?(ce)
                     if @configuration_element_list[ce].key?('controls')
                       @configuration_element_list[ce]['controls'].each do |control, subsection|
                         if info.key?('controls') && info["controls"].include?(control)
                           specifications << specification
-                          found_control_match = true
+                          next
                         end
                       end
                     end
@@ -448,10 +421,7 @@ def compiler_class()
               end
 
               # Skip if we didn't find any controls to match against
-              unless found_control_match
-                @callback.debug("SKIP: '#{check}' had no matching controls")
-                next
-              end
+              @callback.debug("SKIP: '#{check}' had no matching controls")
             end
           end
 
