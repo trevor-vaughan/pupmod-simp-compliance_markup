@@ -136,6 +136,8 @@ def enforcement(key, context=self, options={"mode" => "value"}, &block)
   end
 
   throw :no_such_key if retval == :notfound
+
+  retval
 end
 
 # These cache functions are assumed to be created by the wrapper
@@ -147,6 +149,7 @@ def cached_lookup(key, default, &block)
     retval = yield key, default
     cache(key, retval)
   end
+
   retval
 end
 
