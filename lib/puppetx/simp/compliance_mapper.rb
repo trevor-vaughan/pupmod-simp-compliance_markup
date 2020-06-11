@@ -310,127 +310,8 @@ def compiler_class()
           @profile_list
         end
 
-        def import(filename, data)
-          data.each do |key, value|
-            case key
-            when "profiles"
-              value.each do |profile, map|
-                @profile_list[profile] ||= {}
-                @profile_list[profile] = DeepMerge.deep_merge!(@profile_list[profile], map, {:knockout_prefix => '--'})
-              end
-            when "controls"
-              value.each do |profile, map|
-                @control_list[profile] ||= {}
-                @control_list[profile] = DeepMerge.deep_merge!(@control_list[profile], map, {:knockout_prefix => '--'})
-              end
-            when "checks"
-              value.each do |profile, map|
-                @check_list[profile] ||= {}
-                @check_list[profile] = DeepMerge.deep_merge!(@check_list[profile], map, {:knockout_prefix => '--'})
-
-                check_telemetry = {
-                  'filename' => filename,
-                  'path'     => "#{key}/#{profile}",
-                  'id'       => "#{profile}",
-                  'value'    => Marshal.load(Marshal.dump(map))
-                }
-
-                @check_list[profile]['telemetry'] = [check_telemetry]
-              end
-            when "ce"
-              value.each do |profile, map|
-                @configuration_element_list[profile] ||= {}
-                @configuration_element_list[profile] = DeepMerge.deep_merge!(@configuration_element_list[profile], map, {:knockout_prefix => '--'})
-              end
-            end
-          end
-        end
-
-        def list_puppet_params(profile_list)
-          retval = {}
-
-          # Potential matches prior to confinement
-          specifications = []
-
-          profile_list.reverse.each do |profile|
-            unless @profile_list.key?(profile)
-              @callback.debug(%{SKIP: Profile '#{profile}' not in '#{@profile_list.keys.join("', '")}'})
-              next
-            end
-
-            info = @profile_list[profile]
-
-            @check_list.each do |check, spec|
-              specification = Marshal.load(Marshal.dump(spec))
-
-              # Skip unless this item applies to puppet
-              unless (specification['type'] == 'puppet') || (specification['type'] == 'puppet-class-parameter')
-                @callback.debug("SKIP: '#{check}' is not a puppet parameter")
-                next
-              end
-
-              # Skip unless we actually have a parameter setting
-              unless specification.key?('settings')
-                @callback.debug("SKIP: '#{check}' does not have any settings")
-                next
-              end
-
-              unless specification['settings'].key?('parameter')
-                @callback.debug("SKIP: '#{check}' does not have a parameter specified")
-                next
-              end
-
-              # A parameter with a setting but without a value is invalid
-              unless specification['settings'].key?('value')
-                location = 'unknown'
-
-                if specification['telemetry'] && specification['telemetry'].first
-                  location = specification['telemetry'].first['filename']
-                end
-
-                raise "'#{check}' has parameter '#{specification['settings']['parameter']}' in '#{location}' but has no assigned value"
-              end
-
-              if info.key?('checks') && info['checks'].include?(check) && (info['checks'][check] == true)
-                specifications << specification
-                next
-              end
-
-              if specification.key?('controls')
-                specification['controls'].each do |control, subsection|
-                  if info.key?('controls') && info['controls'].include?(control) && (info['controls'][control] == true)
-                    specifications << specification
-                    next
-                  end
-                end
-              end
-
-              if specification.key?('ces')
-                specification['ces'].each do |ce|
-                  if (info.key?('ces')) && (info['ces'].key?(ce)) && (info['ces'][ce] == true)
-                    specifications << specification
-                    next
-                  elsif @configuration_element_list.key?(ce)
-                    if @configuration_element_list[ce].key?('controls')
-                      @configuration_element_list[ce]['controls'].each do |control, subsection|
-                        if info.key?('controls') && info["controls"].include?(control)
-                          specifications << specification
-                          next
-                        end
-                      end
-                    end
-                  end
-                end
-              end
-
-              # Skip if we didn't find any controls to match against
-              @callback.debug("SKIP: '#{check}' had no matching controls")
-            end
-          end
-
-          # Now that all potential matches have been collected, we need to
-          # apply the confinement
-          specifications.delete_if do |specification|
+        def apply_confinement(value)
+          value.delete_if do |_key, specification|
             delete_item = false
 
             catch(:confine_end) do
@@ -447,23 +328,32 @@ def compiler_class()
                         location = specification['telemetry'].first['filename']
                       end
 
-                      raise "'confine' must be a Hash in check '#{check}' in '#{location}'"
+                      raise "'confine' must be a Hash in '#{location}'"
                     end
                   end
 
                   confine.each do |confinement_setting, confinement_value|
                     if confinement_setting == 'module_name'
-                      unless @callback.module_list.map { |obj| obj['name'] }.include?(confinement_value)
+                      known_module = @callback.module_list.select { |obj| obj['name'] == confinement_value }
+
+                      if known_module.empty?
                         delete_item = true
                         throw :confine_end
                       end
 
                       if confine['module_version']
                         require 'semantic_puppet'
-                        known_module = @callback.module_list.select { |obj| obj['name'] == confinement_setting }
 
-                        currentver = SemanticPuppet::Version.parse(known_module.first['version'])
-                        requiredver = SemanticPuppet::VersionRange.parse(confine['module_version'])
+                        currentver = nil
+                        requiredver = {}
+                        begin
+                          currentver = SemanticPuppet::Version.parse(known_module.first['version'])
+                          requiredver = SemanticPuppet::VersionRange.parse(confine['module_version'])
+                        rescue
+                          warn "Unable to match #{known_module} against version requirement #{confine['module_version']}"
+                          delete_item = true
+                          throw :confine_end
+                        end
 
                         unless requiredver.include?(currentver)
                           delete_item = true
@@ -483,6 +373,136 @@ def compiler_class()
             end
 
             delete_item
+          end
+
+          value
+        end
+
+        def import(filename, data)
+          data.each do |key, value|
+            case key
+            when "profiles"
+              value.each do |profile, map|
+                @profile_list[profile] ||= {}
+                @profile_list[profile] = DeepMerge.deep_merge!(@profile_list[profile], map, {:knockout_prefix => '--'})
+              end
+
+              apply_confinement(@profile_list)
+            when "controls"
+              value.each do |profile, map|
+                @control_list[profile] ||= {}
+                @control_list[profile] = DeepMerge.deep_merge!(@control_list[profile], map, {:knockout_prefix => '--'})
+              end
+
+              apply_confinement(@control_list)
+            when "checks"
+              value.each do |profile, map|
+                @check_list[profile] ||= {}
+                @check_list[profile] = DeepMerge.deep_merge!(@check_list[profile], map, {:knockout_prefix => '--'})
+
+                check_telemetry = {
+                  'filename' => filename,
+                  'path'     => "#{key}/#{profile}",
+                  'id'       => "#{profile}",
+                  'value'    => Marshal.load(Marshal.dump(map))
+                }
+
+                @check_list[profile]['telemetry'] = [check_telemetry]
+
+              end
+
+              apply_confinement(@check_list)
+            when "ce"
+              value.each do |profile, map|
+                @configuration_element_list[profile] ||= {}
+                @configuration_element_list[profile] = DeepMerge.deep_merge!(@configuration_element_list[profile], map, {:knockout_prefix => '--'})
+              end
+
+              apply_confinement(@configuration_element_list)
+            end
+          end
+        end
+
+        def list_puppet_params(profile_list)
+          retval = {}
+
+          # Potential matches prior to confinement
+          specifications = []
+
+          profile_list.reverse.each do |profile_name|
+            unless @profile_list.key?(profile_name)
+              @callback.debug(%{SKIP: Profile '#{profile_name}' not in '#{@profile_list.keys.join("', '")}'})
+              next
+            end
+
+            info = @profile_list[profile_name]
+
+            @check_list.each do |check_name, spec|
+              specification = Marshal.load(Marshal.dump(spec))
+
+              # Skip unless this item applies to puppet
+              unless (specification['type'] == 'puppet') || (specification['type'] == 'puppet-class-parameter')
+                @callback.debug("SKIP: '#{check_name}' is not a puppet parameter")
+                next
+              end
+
+              # Skip unless we actually have a parameter setting
+              unless specification.key?('settings')
+                @callback.debug("SKIP: '#{check_name}' does not have any settings")
+                next
+              end
+
+              unless specification['settings'].key?('parameter')
+                @callback.debug("SKIP: '#{check_name}' does not have a parameter specified")
+                next
+              end
+
+              # A parameter with a setting but without a value is invalid
+              unless specification['settings'].key?('value')
+                location = 'unknown'
+
+                if specification['telemetry'] && specification['telemetry'].first
+                  location = specification['telemetry'].first['filename']
+                end
+
+                raise "'#{check_name}' has parameter '#{specification['settings']['parameter']}' in '#{location}' but has no assigned value"
+              end
+
+              if info.key?('checks') && info['checks'].include?(check_name) && (info['checks'][check_name] == true)
+                specifications << specification
+                next
+              end
+
+              if specification.key?('controls')
+                specification['controls'].each do |control_name, subsection|
+                  if info.key?('controls') && info['controls'].include?(control_name) && (info['controls'][control_name] == true)
+                    specifications << specification
+                    next
+                  end
+                end
+              end
+
+              if specification.key?('ces')
+                specification['ces'].each do |ce_name|
+                  if (info.key?('ces')) && (info['ces'].key?(ce_name)) && (info['ces'][ce_name] == true)
+                    specifications << specification
+                    next
+                  elsif @configuration_element_list.key?(ce_name)
+                    if @configuration_element_list[ce_name].key?('controls')
+                      @configuration_element_list[ce_name]['controls'].each do |control_name, subsection|
+                        if info.key?('controls') && info["controls"].include?(control_name)
+                          specifications << specification
+                          next
+                        end
+                      end
+                    end
+                  end
+                end
+              end
+
+              # Skip if we didn't find any controls to match against
+              @callback.debug("SKIP: '#{check_name}' had no matching controls")
+            end
           end
 
           # If we didn't find anything, we can just bail
