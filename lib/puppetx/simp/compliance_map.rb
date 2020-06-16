@@ -485,7 +485,7 @@ def environment
 end
 
 def lookup_fact(fact)
-  @context.lookupvar("facts").dig(*fact.split('.'))
+  @context.lookupvar('facts')[fact]
 end
 
 def module_list

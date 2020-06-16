@@ -131,7 +131,7 @@ Puppet::Functions.create_function(:'compliance_markup::enforcement') do
   end
 
   def lookup_fact(fact)
-    closure_scope.lookupvar("facts").dig(*fact.split('.'))
+    closure_scope.lookupvar('facts')[fact]
   end
 
   def module_list
