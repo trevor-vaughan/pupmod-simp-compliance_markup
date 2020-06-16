@@ -485,7 +485,11 @@ def environment
 end
 
 def lookup_fact(fact)
-  @context.lookupvar('facts')[fact]
+  begin
+    @context.call_function(:dig, @context.lookupvar('facts'), *fact.split('.'))
+  rescue ArgumentError
+    nil
+  end
 end
 
 def module_list
