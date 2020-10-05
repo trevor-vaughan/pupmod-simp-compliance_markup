@@ -178,9 +178,6 @@ def compiler_class()
 
       @compliance_data = {}
 
-      @compliance_data["puppet://compliance_markup::compliance_map"] = (module_scope_compliance_map)
-      @compliance_data["puppet://compliance_map"]                    = (top_scope_compliance_map)
-
       moduleroot = File.expand_path('../../../../../', __FILE__)
       rootpaths  = {}
 
@@ -247,6 +244,9 @@ def compiler_class()
           end
         end
       end
+
+      @compliance_data["puppet://compliance_markup::compliance_map"] = (module_scope_compliance_map)
+      @compliance_data["puppet://compliance_map"]                    = (top_scope_compliance_map)
 
       @v2 = v2_compiler.new(callback)
 
