@@ -172,11 +172,11 @@ def compiler_class()
     def load(options={}, &block)
       @callback.debug("callback = #{callback.codebase}")
 
+      module_scope_compliance_map = callback.cached_lookup "compliance_markup::compliance_map", {}, &block
+      top_scope_compliance_map    = callback.cached_lookup "compliance_map", {}, &block
+
 
       @compliance_data = {}
-
-      @compliance_data["puppet://compliance_markup::compliance_map"] = (module_scope_compliance_map)
-      @compliance_data["puppet://compliance_map"]                    = (top_scope_compliance_map)
 
       moduleroot = File.expand_path('../../../../../', __FILE__)
       rootpaths  = {}
@@ -245,8 +245,8 @@ def compiler_class()
         end
       end
 
-      module_scope_compliance_map = callback.cached_lookup "compliance_markup::compliance_map", {}, &block
-      top_scope_compliance_map    = callback.cached_lookup "compliance_map", {}, &block
+      @compliance_data["puppet://compliance_markup::compliance_map"] = (module_scope_compliance_map)
+      @compliance_data["puppet://compliance_map"]                    = (top_scope_compliance_map)
 
       @v2 = v2_compiler.new(callback)
 
