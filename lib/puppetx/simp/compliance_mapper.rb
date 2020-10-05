@@ -172,9 +172,6 @@ def compiler_class()
     def load(options={}, &block)
       @callback.debug("callback = #{callback.codebase}")
 
-      module_scope_compliance_map = callback.cached_lookup "compliance_markup::compliance_map", {}, &block
-      top_scope_compliance_map    = callback.cached_lookup "compliance_map", {}, &block
-
 
       @compliance_data = {}
 
@@ -247,6 +244,9 @@ def compiler_class()
           end
         end
       end
+
+      module_scope_compliance_map = callback.cached_lookup "compliance_markup::compliance_map", {}, &block
+      top_scope_compliance_map    = callback.cached_lookup "compliance_map", {}, &block
 
       @v2 = v2_compiler.new(callback)
 
