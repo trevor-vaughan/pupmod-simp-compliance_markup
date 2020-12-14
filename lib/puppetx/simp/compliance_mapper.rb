@@ -45,8 +45,6 @@ def enforcement(key, context=self, options={"mode" => "value"}, &block)
   lock = context.cached_value("lock") if context.cache_has_key("lock")
 
   unless lock
-    debug_output = {}
-
     context.cache("lock", true)
 
     begin
@@ -75,7 +73,6 @@ def enforcement(key, context=self, options={"mode" => "value"}, &block)
         profile_compiler.load(options, &block)
 
         profile_map = profile_compiler.list_puppet_params(profile_list).cook do |item|
-          debug_output[item["parameter"]] = item["telemetry"]
           item[options["mode"]]
 
           # Add this parameter to the context cache so that it is
@@ -86,7 +83,6 @@ def enforcement(key, context=self, options={"mode" => "value"}, &block)
           context.cache(item["parameter"], item["value"])
         end
 
-        context.cache("debug_output_#{profile}", debug_output)
         context.cache("compliance_map_#{profile}", profile_map)
 
         compile_end_time = Time.now
@@ -101,26 +97,7 @@ def enforcement(key, context=self, options={"mode" => "value"}, &block)
           # Handle a knockout prefix
           unless profile_map.key?("--" + key)
             if profile_map.key?(key)
-              debug("debug: v2 details for #{key}")
-
               retval = profile_map[key]
-              files  = {}
-
-              debug_output[key].each do |telemetryinfo|
-                unless files.key?(telemetryinfo["filename"])
-                  files[telemetryinfo["filename"]] = []
-                end
-                files[telemetryinfo["filename"]] << telemetryinfo
-              end
-
-              files.each do |k, v|
-                debug("     #{k}:")
-
-                v.each do |value2|
-                  debug("             #{value2['id']}")
-                  debug("                        #{value2['value']['settings']['value']}")
-                end
-              end
             end
           end
         end
@@ -328,10 +305,6 @@ def compiler_class()
                     unless specification['settings'].key?('value')
                       location = 'unknown'
 
-                      if specification['telemetry'] && specification['telemetry'].first
-                        location = specification['telemetry'].first['filename']
-                      end
-
                       raise "'confine' must be a Hash in '#{location}'"
                     end
                   end
@@ -401,15 +374,6 @@ def compiler_class()
               value.each do |profile, map|
                 @check_list[profile] ||= {}
                 @check_list[profile] = @check_list[profile].deep_merge!(map, {:knockout_prefix => '--'})
-
-                check_telemetry = {
-                  'filename' => filename,
-                  'path'     => "#{key}/#{profile}",
-                  'id'       => "#{profile}",
-                  'value'    => Marshal.load(Marshal.dump(map))
-                }
-
-                @check_list[profile]['telemetry'] = [check_telemetry]
               end
             when "ce"
               value.each do |profile, map|
@@ -454,10 +418,6 @@ def compiler_class()
               # A parameter with a setting but without a value is invalid
               unless specification['settings'].key?('value')
                 location = 'unknown'
-
-                if specification['telemetry'] && specification['telemetry'].first
-                  location = specification['telemetry'].first['filename']
-                end
 
                 raise "'#{check_name}' has parameter '#{specification['settings']['parameter']}' in '#{location}' but has no assigned value"
               end
@@ -522,7 +482,6 @@ def compiler_class()
                 'controls'    => specification['controls'].nil? ? {} : Marshal.load(Marshal.dump(specification['controls'])),
                 'identifiers' => specification['identifiers'].nil? ? {} : Marshal.load(Marshal.dump(specification['identifiers'])),
                 'oval-ids'    => specification['oval-ids'].nil? ? {} : Marshal.load(Marshal.dump(specification['oval-ids'])),
-                'telemetry'   => Marshal.load(Marshal.dump(specification['telemetry'])),
               }
 
               next
@@ -566,8 +525,6 @@ def compiler_class()
                 end
               end
             end
-
-            retval[parameter]['telemetry'] << Marshal.load(Marshal.dump(specification['telemetry']))
           end
 
           return retval
