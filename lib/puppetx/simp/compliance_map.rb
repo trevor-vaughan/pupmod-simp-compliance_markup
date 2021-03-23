@@ -453,26 +453,6 @@ def custom_call_file_info
   return file_info
 end
 
-# These methods are part of the callback api for compliance engine.
-
-def cache(key, value)
-  if @hash == nil
-    @hash = {}
-  end
-  @hash[key] = value
-end
-def cached_value(key)
-  if @hash == nil
-    @hash = {}
-  end
-  @hash[key]
-end
-def cache_has_key(key)
-  if @hash == nil
-    @hash = {}
-  end
-  @hash.key?(key)
-end
 def debug(message)
   return
 end

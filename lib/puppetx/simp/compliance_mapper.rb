@@ -41,14 +41,13 @@ def enforcement(key, context=self, options={"mode" => "value"}, &block)
 
   retval = :notfound
 
-  lock = false
-  lock = context.cached_value("lock") if context.cache_has_key("lock")
+  lock = context.cached_value('_simp_compliance_markup_lock') if context.cache_has_key('_simp_compliance_markup_lock')
 
   unless lock
-    context.cache("lock", true)
+    context.cache('_simp_compliance_markup_lock', true)
 
     begin
-      profile_list = cached_lookup("compliance_markup::enforcement", [], &block)
+      profile_list = call_function('lookup', 'compliance_markup::enforcement', { 'default_value' => [] })
 
       unless profile_list == []
         debug("debug: compliance_markup::enforcement set to #{profile_list}, attempting to enforce")
@@ -112,24 +111,11 @@ def enforcement(key, context=self, options={"mode" => "value"}, &block)
       debug(e.message)
       debug(e.backtrace.inspect)
     ensure
-      context.cache("lock", false)
+      context.cache('_simp_compliance_markup_lock', false)
     end
   end
 
   throw :no_such_key if retval == :notfound
-
-  retval
-end
-
-# These cache functions are assumed to be created by the wrapper
-# object backend.
-def cached_lookup(key, default, &block)
-  if cache_has_key(key)
-    retval = cached_value(key)
-  else
-    retval = yield key, default
-    cache(key, retval)
-  end
 
   retval
 end
@@ -152,9 +138,8 @@ def compiler_class()
     def load(options={}, &block)
       @callback.debug("callback = #{callback.codebase}")
 
-      module_scope_compliance_map = callback.cached_lookup "compliance_markup::compliance_map", {}, &block
-      top_scope_compliance_map    = callback.cached_lookup "compliance_map", {}, &block
-
+      module_scope_compliance_map = block.call 'compliance_markup::compliance_map', {}
+      top_scope_compliance_map    = block.call 'compliance_map', {}
 
       @compliance_data = {}
 
