@@ -29,15 +29,14 @@ def enforcement(key, context=self, options={"mode" => "value"}, &block)
   options['mode'] ||= 'value'
 
   # Throw away keys we know we can't handle.
-  # This also prevents recursion since these are the only keys internally we call.
-  throw :no_such_key if [
+  # This also prevents recursion.
+  throw :no_such_key if
+    key.start_with?('compliance_markup::') || (
+      [
       'lookup_options',
-      'compliance_map',
-      'compliance_markup::compliance_map::percent_sign',
-      'compliance_markup::enforcement',
-      'compliance_markup::version',
-      'compliance_markup::percent_sign'
-  ].include?(key)
+      'compliance_map'
+      ].include?(key)
+    )
 
   retval = :notfound
 

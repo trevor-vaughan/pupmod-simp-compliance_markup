@@ -66,7 +66,7 @@ Puppet::Functions.create_function(:'compliance_markup::enforcement') do
         debug("Threw error #{e.to_s}")
       end
 
-      not_found
+      @context.not_found
     end
 
     # Add the key to the cache if we found something
@@ -81,10 +81,6 @@ Puppet::Functions.create_function(:'compliance_markup::enforcement') do
 
   def environment()
     closure_scope.environment.name.to_s
-  end
-
-  def not_found()
-    @context.not_found
   end
 
   def debug(message)
