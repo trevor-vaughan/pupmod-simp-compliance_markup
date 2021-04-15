@@ -46,7 +46,7 @@ def enforcement(key, context=self, options={"mode" => "value"}, &block)
     context.cache('_simp_compliance_markup_lock', true)
 
     begin
-      profile_list = call_function('lookup', 'compliance_markup::enforcement', { 'default_value' => [] })
+      profile_list = Array(call_function('lookup', 'compliance_markup::enforcement', { 'default_value' => [] }))
 
       unless profile_list == []
         debug("debug: compliance_markup::enforcement set to #{profile_list}, attempting to enforce")

@@ -61,6 +61,16 @@ describe 'lookup' do
           expect(result).to be_instance_of(Array)
           expect(result).to include('/bin/disa')
         end
+
+        context 'with a String compliance map' do
+          let(:policy_order) { 'disa_stig' }
+
+          it 'returns /bin/disa' do
+            result = subject.execute('useradd::shells')
+            expect(result).to be_instance_of(Array)
+            expect(result).to include('/bin/disa')
+          end
+        end
       end
 
       context 'when disa is higher priority' do
